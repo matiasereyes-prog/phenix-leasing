@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Phenix Leasing · Tu próximo auto</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --black:#0a0a0a;
+  --white:#ffffff;
+  --orange:#f05a28;
+  --orange-light:#fff3ee;
+  --gray:#f5f5f3;
+  --gray2:#e8e8e4;
+  --text2:#6b6b6b;
+  --text3:#9a9a9a;
+  --sans:'Inter',sans-serif;
+  --display:'Syne',sans-serif;
+  --radius:14px;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--white);color:var(--black);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:20px 48px;
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(255,255,255,0.92);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--gray2);
+}
+.nav-logo{
+  font-family:var(--display);font-size:22px;font-weight:800;
+  color:var(--black);letter-spacing:-0.5px;text-decoration:none;
+  display:flex;align-items:center;gap:8px;
+}
+.nav-logo-mark{
+  width:32px;height:32px;background:var(--orange);
+  border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-size:16px;
+}
+.nav-links{display:flex;align-items:center;gap:32px}
+.nav-link{font-size:14px;font-weight:500;color:var(--text2);text-decoration:none;transition:color 0.2s}
+.nav-link:hover{color:var(--black)}
+.nav-cta{
+  background:var(--black);color:var(--white);
+  border:none;border-radius:8px;padding:10px 22px;
+  font-family:var(--sans);font-size:14px;font-weight:600;
+  cursor:pointer;transition:all 0.2s;text-decoration:none;
+}
+.nav-cta:hover{background:#333}
+
+/* ── HERO ── */
+.hero{
+  min-height:100vh;padding:140px 48px 80px;
+  display:grid;grid-template-columns:1fr 440px;
+  gap:80px;align-items:center;
+  max-width:1200px;margin:0 auto;
+}
+.hero-left{}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--orange-light);border-radius:20px;
+  padding:6px 14px;font-size:13px;font-weight:600;
+  color:var(--orange);margin-bottom:28px;
+}
+.hero-eyebrow-dot{width:6px;height:6px;border-radius:50%;background:var(--orange)}
+.hero-title{
+  font-family:var(--display);font-size:clamp(44px,5vw,68px);
+  font-weight:800;line-height:1.05;letter-spacing:-2px;
+  color:var(--black);margin-bottom:24px;
+}
+.hero-title em{font-style:normal;color:var(--orange)}
+.hero-body{
+  font-size:18px;line-height:1.7;color:var(--text2);
+  max-width:480px;margin-bottom:40px;font-weight:400;
+}
+.hero-stats{display:flex;gap:40px;margin-bottom:48px}
+.stat-item{}
+.stat-num{font-family:var(--display);font-size:32px;font-weight:800;color:var(--black);letter-spacing:-1px}
+.stat-label{font-size:13px;color:var(--text3);margin-top:2px}
+.hero-social-proof{
+  display:flex;align-items:center;gap:12px;
+  font-size:13px;color:var(--text2);
+}
+.avatars{display:flex}
+.avatar{
+  width:32px;height:32px;border-radius:50%;
+  border:2px solid white;margin-left:-8px;
+  background:var(--gray2);display:flex;align-items:center;
+  justify-content:center;font-size:12px;font-weight:700;
+}
+.avatar:first-child{margin-left:0}
+
+/* ── FORM CARD ── */
+.form-card{
+  background:var(--white);
+  border:1.5px solid var(--gray2);
+  border-radius:24px;padding:36px;
+  box-shadow:0 4px 40px rgba(0,0,0,0.08),0 1px 4px rgba(0,0,0,0.04);
+  position:sticky;top:100px;
+}
+.form-title{
+  font-family:var(--display);font-size:22px;font-weight:800;
+  color:var(--black);letter-spacing:-0.5px;margin-bottom:6px;
+}
+.form-subtitle{font-size:13px;color:var(--text2);margin-bottom:24px;line-height:1.5}
+.field{margin-bottom:16px}
+.field-label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px}
+.field-input{
+  width:100%;background:var(--gray);border:1.5px solid transparent;
+  border-radius:10px;padding:12px 16px;
+  font-family:var(--sans);font-size:14px;color:var(--black);
+  outline:none;transition:all 0.2s;
+}
+.field-input:focus{border-color:var(--black);background:var(--white)}
+.field-input::placeholder{color:var(--text3)}
+.field-select{
+  width:100%;background:var(--gray);border:1.5px solid transparent;
+  border-radius:10px;padding:12px 16px;
+  font-family:var(--sans);font-size:14px;color:var(--black);
+  outline:none;cursor:pointer;transition:all 0.2s;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b6b6b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;
+  padding-right:40px;
+}
+.field-select:focus{border-color:var(--black);background-color:var(--white)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.submit-btn{
+  width:100%;padding:15px;background:var(--orange);color:white;
+  border:none;border-radius:10px;font-family:var(--display);
+  font-size:16px;font-weight:700;cursor:pointer;
+  transition:all 0.2s;margin-top:4px;letter-spacing:-0.3px;
+}
+.submit-btn:hover{background:#d94e21;transform:translateY(-1px);box-shadow:0 6px 20px rgba(240,90,40,0.35)}
+.submit-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.form-disclaimer{font-size:11px;color:var(--text3);text-align:center;margin-top:12px;line-height:1.6}
+.form-success{
+  text-align:center;padding:40px 20px;
+  animation:fadeIn 0.4s ease;
+}
+.form-success-icon{font-size:48px;margin-bottom:16px}
+.form-success-title{font-family:var(--display);font-size:22px;font-weight:800;color:var(--black);margin-bottom:8px;letter-spacing:-0.5px}
+.form-success-text{font-size:14px;color:var(--text2);line-height:1.6}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── HOW IT WORKS ── */
+.section{padding:96px 48px;max-width:1200px;margin:0 auto}
+.section-header{margin-bottom:64px}
+.section-tag{
+  font-size:13px;font-weight:600;color:var(--orange);
+  margin-bottom:16px;
+}
+.section-title{
+  font-family:var(--display);font-size:clamp(32px,4vw,48px);
+  font-weight:800;letter-spacing:-1.5px;color:var(--black);
+  line-height:1.1;max-width:560px;
+}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:32px;margin-top:56px}
+.step{padding:28px;border-radius:var(--radius);background:var(--gray);position:relative}
+.step-num{
+  font-family:var(--display);font-size:48px;font-weight:800;
+  color:var(--gray2);letter-spacing:-2px;line-height:1;margin-bottom:16px;
+}
+.step-title{font-family:var(--display);font-size:18px;font-weight:700;color:var(--black);margin-bottom:8px;letter-spacing:-0.3px}
+.step-text{font-size:14px;color:var(--text2);line-height:1.6}
+.step.highlight{background:var(--black)}
+.step.highlight .step-num{color:#333}
+.step.highlight .step-title{color:var(--white)}
+.step.highlight .step-text{color:#888}
+
+/* ── BENEFICIOS ── */
+.benefits-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px;background:var(--gray2);border-radius:var(--radius);overflow:hidden;margin-top:56px}
+.benefit{background:var(--white);padding:40px;transition:background 0.2s}
+.benefit:hover{background:var(--orange-light)}
+.benefit-icon{font-size:28px;margin-bottom:16px}
+.benefit-title{font-family:var(--display);font-size:20px;font-weight:700;color:var(--black);margin-bottom:8px;letter-spacing:-0.3px}
+.benefit-text{font-size:14px;color:var(--text2);line-height:1.7}
+
+/* ── FAQ ── */
+.faq-list{margin-top:48px;display:flex;flex-direction:column;gap:2px}
+.faq-item{
+  background:var(--gray);border-radius:10px;
+  overflow:hidden;transition:background 0.2s;
+}
+.faq-question{
+  width:100%;padding:20px 24px;background:transparent;border:none;
+  text-align:left;font-family:var(--sans);font-size:15px;font-weight:600;
+  color:var(--black);cursor:pointer;display:flex;justify-content:space-between;align-items:center;
+  transition:color 0.2s;
+}
+.faq-question:hover{color:var(--orange)}
+.faq-arrow{transition:transform 0.3s;font-size:18px;color:var(--text3)}
+.faq-answer{
+  max-height:0;overflow:hidden;transition:max-height 0.3s ease;
+  padding:0 24px;font-size:14px;color:var(--text2);line-height:1.7;
+}
+.faq-item.open .faq-answer{max-height:200px;padding:0 24px 20px}
+.faq-item.open .faq-arrow{transform:rotate(180deg)}
+
+/* ── CTA FINAL ── */
+.cta-section{
+  background:var(--black);margin:0 48px 96px;
+  border-radius:24px;padding:80px 64px;
+  display:grid;grid-template-columns:1fr auto;
+  align-items:center;gap:40px;
+}
+.cta-title{
+  font-family:var(--display);font-size:clamp(28px,3vw,44px);
+  font-weight:800;color:var(--white);letter-spacing:-1px;
+  line-height:1.1;max-width:560px;
+}
+.cta-title span{color:var(--orange)}
+.cta-btn{
+  background:var(--orange);color:white;border:none;
+  border-radius:12px;padding:18px 36px;
+  font-family:var(--display);font-size:16px;font-weight:700;
+  cursor:pointer;white-space:nowrap;transition:all 0.2s;
+  text-decoration:none;display:inline-block;letter-spacing:-0.3px;
+}
+.cta-btn:hover{background:#d94e21;transform:translateY(-2px)}
+
+/* ── FOOTER ── */
+footer{
+  padding:48px;border-top:1px solid var(--gray2);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.footer-logo{font-family:var(--display);font-size:18px;font-weight:800;color:var(--black)}
+.footer-text{font-size:13px;color:var(--text3)}
+
+/* ── FULL-WIDTH BG SECTIONS ── */
+.section-full{background:var(--gray);padding:96px 0}
+.section-full .section{padding:0 48px}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  nav{padding:16px 24px}
+  .hero{grid-template-columns:1fr;padding:120px 24px 60px;gap:48px}
+  .form-card{position:static}
+  .steps{grid-template-columns:1fr 1fr}
+  .benefits-grid{grid-template-columns:1fr}
+  .cta-section{grid-template-columns:1fr;padding:48px 32px;margin:0 24px 64px}
+  .section{padding:64px 24px}
+  footer{padding:32px 24px;flex-direction:column;gap:12px;text-align:center}
+  .nav-links{display:none}
+}
+@media(max-width:480px){
+  .steps{grid-template-columns:1fr}
+  .hero-stats{gap:24px}
+  .field-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">
+    <div class="nav-logo-mark">🔥</div>
+    Phenix Leasing
+  </a>
+  <div class="nav-links">
+    <a class="nav-link" href="#como-funciona">Cómo funciona</a>
+    <a class="nav-link" href="#beneficios">Beneficios</a>
+    <a class="nav-link" href="#faq">FAQ</a>
+  </div>
+  <a class="nav-cta" href="#formulario">Solicitar cotización</a>
+</nav>
+
+<!-- HERO -->
+<section style="background:var(--white)">
+  <div class="hero">
+    <div class="hero-left">
+      <div class="hero-eyebrow">
+        <div class="hero-eyebrow-dot"></div>
+        Leasing automotor en dólares
+      </div>
+      <h1 class="hero-title">
+        Tu próximo auto.<br>
+        Sin banco.<br>
+        <em>Sin vueltas.</em>
+      </h1>
+      <p class="hero-body">
+        Phenix Leasing te da acceso a autos 0km con cuotas en dólares, garantía en blockchain y un proceso 100% digital. Pensado para freelancers y early adopters que no quieren el sistema financiero tradicional.
+      </p>
+      <div class="hero-stats">
+        <div class="stat-item">
+          <div class="stat-num">48hs</div>
+          <div class="stat-label">Aprobación</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">0%</div>
+          <div class="stat-label">Trámites en papel</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">USD</div>
+          <div class="stat-label">Cuotas en dólares</div>
+        </div>
+      </div>
+      <div class="hero-social-proof">
+        <div class="avatars">
+          <div class="avatar" style="background:#ffd6c8;color:#f05a28">M</div>
+          <div class="avatar" style="background:#d6e8ff;color:#3366ff">J</div>
+          <div class="avatar" style="background:#d6ffd6;color:#00a651">S</div>
+          <div class="avatar" style="background:#f5d6ff;color:#7c3aed">A</div>
+        </div>
+        <span>Más de 200 freelancers ya tienen su auto</span>
+      </div>
+    </div>
+
+    <!-- FORM -->
+    <div class="form-card" id="formulario">
+      <div id="form-content">
+        <div class="form-title">Cotizá tu leasing</div>
+        <div class="form-subtitle">Completá tus datos y te contactamos en menos de 24 horas.</div>
+
+        <div class="field">
+          <label class="field-label">Nombre completo</label>
+          <input class="field-input" type="text" id="f-nombre" placeholder="Juan García"/>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">Email</label>
+            <input class="field-input" type="email" id="f-email" placeholder="juan@gmail.com"/>
+          </div>
+          <div class="field">
+            <label class="field-label">Teléfono</label>
+            <input class="field-input" type="tel" id="f-telefono" placeholder="+54 11 ..."/>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Auto de interés</label>
+          <select class="field-select" id="f-auto">
+            <option value="">Seleccioná un modelo</option>
+            <option>Toyota GR86</option>
+            <option>Toyota Corolla Cross</option>
+            <option>Honda Civic</option>
+            <option>Volkswagen Vento</option>
+            <option>Ford Ranger</option>
+            <option>Chevrolet Onix</option>
+            <option>Otro modelo</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label">Monto estimado del vehículo (USD)</label>
+          <select class="field-select" id="f-monto">
+            <option value="">Seleccioná un rango</option>
+            <option>Hasta USD 20.000</option>
+            <option>USD 20.000 – 30.000</option>
+            <option>USD 30.000 – 50.000</option>
+            <option>Más de USD 50.000</option>
+          </select>
+        </div>
+        <button class="submit-btn" id="submit-btn" onclick="submitForm()">
+          Quiero mi cotización →
+        </button>
+        <div class="form-disclaimer">
+          Sin compromiso. Tu información está protegida y nunca se comparte con terceros.
+        </div>
+      </div>
+      <div id="form-success" class="form-success" style="display:none">
+        <div class="form-success-icon">🔥</div>
+        <div class="form-success-title">¡Recibimos tu solicitud!</div>
+        <div class="form-success-text">
+          Te contactamos en menos de 24 horas para armar tu cotización personalizada.<br><br>
+          Mientras tanto, sumate a nuestra comunidad de early adopters.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMO FUNCIONA -->
+<div class="section-full" id="como-funciona">
+  <div class="section">
+    <div class="section-header">
+      <div class="section-tag">El proceso</div>
+      <h2 class="section-title">De cero a las llaves en cuatro pasos</h2>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-title">Cotizás online</div>
+        <div class="step-text">Completás el formulario con el auto que querés y tu situación financiera. Sin turnos, sin sucursales.</div>
+      </div>
+      <div class="step highlight">
+        <div class="step-num">02</div>
+        <div class="step-title">Aprobación en 48hs</div>
+        <div class="step-text">Analizamos tu perfil y te enviamos una propuesta personalizada con cuotas en dólares.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-title">Firmás digitalmente</div>
+        <div class="step-text">El contrato es 100% digital y la garantía queda bloqueada en blockchain. La inscripción registral del vehículo requiere una visita presencial al Registro Automotor.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <div class="step-title">Recibís tu auto</div>
+        <div class="step-text">Coordinamos la entrega del 0km en tu domicilio o en la concesionaria más cercana.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PROCESO ESCROW -->
+<section class="section" id="proceso-escrow">
+  <div class="section-header">
+    <div class="section-tag">Escrow en blockchain</div>
+    <h2 class="section-title">Cómo funciona la garantía con activos virtuales</h2>
+    <p style="font-size:16px;color:var(--text2);margin-top:16px;max-width:580px;line-height:1.7">
+      En lugar de un fiador o garantía bancaria, tu leasing se asegura con un depósito en activos digitales bloqueado en un smart contract. Transparente, automático y sin intermediarios.
+    </p>
+  </div>
+
+  <!-- Timeline -->
+  <div style="position:relative;margin-top:64px">
+    <!-- Línea conectora -->
+    <div style="position:absolute;left:31px;top:40px;bottom:40px;width:2px;background:var(--gray2);z-index:0"></div>
+
+    <div style="display:flex;flex-direction:column;gap:0">
+
+      <!-- Paso 1 -->
+      <div style="display:flex;gap:32px;align-items:flex-start;margin-bottom:48px;position:relative;z-index:1">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--black);color:white;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:20px;font-weight:800;flex-shrink:0">1</div>
+        <div style="padding-top:12px;flex:1">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+            <div style="font-family:var(--display);font-size:20px;font-weight:800;color:var(--black);letter-spacing:-0.3px">El lessor crea el contrato en blockchain</div>
+            <span style="background:var(--gray);border-radius:20px;padding:3px 12px;font-size:12px;font-weight:600;color:var(--text2)">Phenix Leasing</span>
+          </div>
+          <p style="font-size:14px;color:var(--text2);line-height:1.7;max-width:600px">Phenix Leasing despliega un smart contract en la red Base con todos los parámetros del leasing: el auto, el monto del depósito, el plazo, y las condiciones de liberación (una por cada cuota mensual + el pago final).</p>
+          <div style="margin-top:14px;background:var(--gray);border-radius:10px;padding:14px 18px;display:inline-flex;align-items:center;gap:10px;font-size:12px;font-family:monospace;color:var(--text2)">
+            <span style="color:var(--orange);font-weight:700">createLease()</span>
+            <span>→ Contrato en Base Network</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Paso 2 -->
+      <div style="display:flex;gap:32px;align-items:flex-start;margin-bottom:48px;position:relative;z-index:1">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--orange);color:white;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:20px;font-weight:800;flex-shrink:0">2</div>
+        <div style="padding-top:12px;flex:1">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+            <div style="font-family:var(--display);font-size:20px;font-weight:800;color:var(--black);letter-spacing:-0.3px">El lessee deposita la garantía</div>
+            <span style="background:var(--orange-light);border-radius:20px;padding:3px 12px;font-size:12px;font-weight:600;color:var(--orange)">Vos</span>
+          </div>
+          <p style="font-size:14px;color:var(--text2);line-height:1.7;max-width:600px">Desde tu wallet (MetaMask, Coinbase Wallet u otra), depositás el monto de garantía acordado en USDC, ETH o cbBTC directamente al smart contract. Los fondos quedan <strong>bloqueados</strong> — ni vos ni Phenix los puede tocar unilateralmente.</p>
+          <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+            <div style="background:var(--gray);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;color:var(--text2);display:flex;align-items:center;gap:6px">
+              <span>💵</span> USDC
+            </div>
+            <div style="background:var(--gray);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;color:var(--text2);display:flex;align-items:center;gap:6px">
+              <span>⟠</span> ETH
+            </div>
+            <div style="background:var(--gray);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;color:var(--text2);display:flex;align-items:center;gap:6px">
+              <span>₿</span> cbBTC
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Paso 3 -->
+      <div style="display:flex;gap:32px;align-items:flex-start;margin-bottom:48px;position:relative;z-index:1">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--black);color:white;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:20px;font-weight:800;flex-shrink:0">3</div>
+        <div style="padding-top:12px;flex:1">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+            <div style="font-family:var(--display);font-size:20px;font-weight:800;color:var(--black);letter-spacing:-0.3px">Pagás las cuotas mensualmente</div>
+            <span style="background:var(--gray);border-radius:20px;padding:3px 12px;font-size:12px;font-weight:600;color:var(--text2)">Vos + Phenix</span>
+          </div>
+          <p style="font-size:14px;color:var(--text2);line-height:1.7;max-width:600px">Cada mes pagás tu cuota en dólares. Phenix verifica el pago y ejecuta la condición correspondiente en el smart contract, liberando automáticamente la porción de garantía de vuelta a <strong>tu wallet</strong>.</p>
+          <div style="margin-top:14px;background:var(--gray);border-radius:12px;padding:16px 20px;max-width:440px">
+            <div style="font-size:12px;font-weight:700;color:var(--text3);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px">Ejemplo con 10.000 USDC de garantía</div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <div style="display:flex;justify-content:space-between;font-size:13px">
+                <span style="color:var(--text2)">Cuota 1 verificada</span>
+                <span style="color:#00a651;font-weight:700">→ 250 USDC devueltos</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:13px">
+                <span style="color:var(--text2)">Cuota 2 verificada</span>
+                <span style="color:#00a651;font-weight:700">→ 250 USDC devueltos</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;opacity:0.5">
+                <span style="color:var(--text2)">...</span>
+                <span style="color:#00a651;font-weight:700">...</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:13px">
+                <span style="color:var(--text2)">Pago final</span>
+                <span style="color:#00a651;font-weight:700">→ 1.000 USDC devueltos</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Paso 4 -->
+      <div style="display:flex;gap:32px;align-items:flex-start;margin-bottom:48px;position:relative;z-index:1">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--black);color:white;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:20px;font-weight:800;flex-shrink:0">4</div>
+        <div style="padding-top:12px;flex:1">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+            <div style="font-family:var(--display);font-size:20px;font-weight:800;color:var(--black);letter-spacing:-0.3px">Si no pagás: disputa automática</div>
+            <span style="background:#fff3ee;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:600;color:var(--orange)">Solo si incumplís</span>
+          </div>
+          <p style="font-size:14px;color:var(--text2);line-height:1.7;max-width:600px">Si una cuota no se abona, Phenix puede iniciar una disputa en el smart contract. Los fondos quedan congelados y un árbitro independiente (Kleros o juez ordinario) resuelve a quién se liberan. Todo queda registrado on-chain.</p>
+        </div>
+      </div>
+
+      <!-- Paso 5 -->
+      <div style="display:flex;gap:32px;align-items:flex-start;position:relative;z-index:1">
+        <div style="width:64px;height:64px;border-radius:50%;background:#00a651;color:white;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">✓</div>
+        <div style="padding-top:12px;flex:1">
+          <div style="font-family:var(--display);font-size:20px;font-weight:800;color:var(--black);letter-spacing:-0.3px;margin-bottom:8px">Leasing completo: recuperás toda tu garantía</div>
+          <p style="font-size:14px;color:var(--text2);line-height:1.7;max-width:600px">Al pagar todas las cuotas y el pago final, el smart contract se cierra automáticamente. Habrás recuperado el 100% de tu garantía a lo largo del contrato. Podés ejercer la opción de compra del auto o devolverlo.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Info adicional -->
+  <div style="margin-top:64px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+    <div style="background:var(--gray);border-radius:var(--radius);padding:24px">
+      <div style="font-size:24px;margin-bottom:10px">🔍</div>
+      <div style="font-family:var(--display);font-size:15px;font-weight:700;color:var(--black);margin-bottom:6px">Auditable en tiempo real</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.6">Cada transacción queda registrada en Basescan. Podés verificar el estado de tu garantía en cualquier momento.</div>
+    </div>
+    <div style="background:var(--gray);border-radius:var(--radius);padding:24px">
+      <div style="font-size:24px;margin-bottom:10px">⚖️</div>
+      <div style="font-family:var(--display);font-size:15px;font-weight:700;color:var(--black);margin-bottom:6px">Arbitraje justo</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.6">Las disputas se resuelven primero en Kleros (descentralizado) y como segunda instancia ante la Justicia Comercial de CABA.</div>
+    </div>
+    <div style="background:var(--gray);border-radius:var(--radius);padding:24px">
+      <div style="font-size:24px;margin-bottom:10px">📜</div>
+      <div style="font-family:var(--display);font-size:15px;font-weight:700;color:var(--black);margin-bottom:6px">Marco legal argentino</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.6">El contrato se rige por la Ley 25.248 de Leasing y el Código Civil y Comercial de la Nación.</div>
+    </div>
+  </div>
+</section>
+
+<!-- BENEFICIOS -->
+<section class="section" id="beneficios">
+  <div class="section-header">
+    <div class="section-tag">Por qué Phenix</div>
+    <h2 class="section-title">Hecho para los que no encajan en el molde</h2>
+  </div>
+  <div class="benefits-grid">
+    <div class="benefit">
+      <div class="benefit-icon">⚡</div>
+      <div class="benefit-title">Aprobación sin historial crediticio tradicional</div>
+      <div class="benefit-text">Evaluamos tu perfil de forma holística. Freelancers, nómadas digitales y emprendedores son bienvenidos.</div>
+    </div>
+    <div class="benefit">
+      <div class="benefit-icon">🔒</div>
+      <div class="benefit-title">Garantía en blockchain</div>
+      <div class="benefit-text">Tu depósito queda bloqueado en un smart contract en Base. Transparente, auditable e inmutable.</div>
+    </div>
+    <div class="benefit">
+      <div class="benefit-icon">💵</div>
+      <div class="benefit-title">Cuotas en dólares</div>
+      <div class="benefit-text">Sin sorpresas por inflación. Sabés exactamente cuánto pagás cada mes, en dólares.</div>
+    </div>
+    <div class="benefit">
+      <div class="benefit-icon">📱</div>
+      <div class="benefit-title">Todo desde tu celular</div>
+      <div class="benefit-text">Firma digital, seguimiento del contrato y estado del escrow en tiempo real desde el portal.</div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<div class="section-full" id="faq">
+  <div class="section">
+    <div class="section-header">
+      <div class="section-tag">Preguntas frecuentes</div>
+      <h2 class="section-title">Lo que todos preguntan antes de arrancar</h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          ¿Necesito recibo de sueldo para aplicar?
+          <span class="faq-arrow">↓</span>
+        </button>
+        <div class="faq-answer">No necesariamente. Evaluamos distintas fuentes de ingresos: facturación freelance, ingresos en cripto, contratos de trabajo remoto internacional, entre otros. Cada caso se analiza en forma personalizada.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          ¿Qué es el escrow en blockchain?
+          <span class="faq-arrow">↓</span>
+        </button>
+        <div class="faq-answer">Es un depósito de garantía que queda bloqueado en un contrato inteligente (smart contract) en la red Base. Nadie puede tocarlo unilateralmente — se libera automáticamente cuando se cumplen las condiciones pactadas en el contrato.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          ¿En qué moneda pago las cuotas?
+          <span class="faq-arrow">↓</span>
+        </button>
+        <div class="faq-answer">Las cuotas se pactan en dólares (USD). Podés pagarlas en USDC (stablecoin), transferencia bancaria en dólares, o el equivalente en pesos al tipo de cambio del día, según lo que acuerdes con tu ejecutivo.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          ¿Cuánto tiempo tarda la aprobación?
+          <span class="faq-arrow">↓</span>
+        </button>
+        <div class="faq-answer">En la mayoría de los casos, tenés una respuesta en 48 horas hábiles. Una vez aprobado, podés tener el auto en tu puerta en menos de una semana.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          ¿Puedo comprar el auto al final del leasing?
+          <span class="faq-arrow">↓</span>
+        </button>
+        <div class="faq-answer">Sí. Al finalizar el contrato tenés la opción de adquirir el auto por el valor residual pactado desde el inicio, devolver el vehículo, o renovar por un modelo nuevo.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CTA FINAL -->
+<div class="cta-section">
+  <div class="cta-title">
+    Empezá hoy.<br>
+    Tu próximo auto te<br>
+    <span>está esperando.</span>
+  </div>
+  <a class="cta-btn" href="#formulario">Solicitar cotización →</a>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">🔥 Phenix Leasing</div>
+  <div class="footer-text">© 2026 Phenix Leasing. Leasing automotor con escrow blockchain en Base Network.</div>
+</footer>
+
+<script>
+function submitForm() {
+  const nombre = document.getElementById('f-nombre').value.trim();
+  const email = document.getElementById('f-email').value.trim();
+  const telefono = document.getElementById('f-telefono').value.trim();
+  const auto = document.getElementById('f-auto').value;
+  const monto = document.getElementById('f-monto').value;
+
+  if (!nombre || !email || !telefono || !auto || !monto) {
+    // Highlight empty fields
+    [['f-nombre',nombre],['f-email',email],['f-telefono',telefono]].forEach(([id,val]) => {
+      const el = document.getElementById(id);
+      el.style.borderColor = val ? 'transparent' : '#f05a28';
+    });
+    return;
+  }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+  // Simulate API call — replace with your actual endpoint
+  setTimeout(() => {
+    document.getElementById('form-content').style.display = 'none';
+    document.getElementById('form-success').style.display = 'block';
+
+    // Here you would send to your CRM/backend:
+    // fetch('/api/leads', { method:'POST', body: JSON.stringify({nombre,email,telefono,auto,monto}) })
+    console.log('Lead:', { nombre, email, telefono, auto, monto });
+  }, 1200);
+}
+
+function toggleFaq(btn) {
+  const item = btn.closest('.faq-item');
+  const isOpen = item.classList.contains('open');
+  document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+  if (!isOpen) item.classList.add('open');
+}
+
+// Smooth nav highlight on scroll
+window.addEventListener('scroll', () => {
+  const nav = document.querySelector('nav');
+  nav.style.boxShadow = window.scrollY > 20 ? '0 2px 20px rgba(0,0,0,0.06)' : 'none';
+});
+
+// Enter key on form
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.closest('#formulario')) submitForm();
+});
+</script>
+</body>
+</html>
