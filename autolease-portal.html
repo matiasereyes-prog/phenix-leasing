@@ -749,23 +749,16 @@ body {
       <div id="email-msg"></div>
     </div>
 
-    <!-- Step 2: OTP -->
+    <!-- Step 2: Magic Link enviado -->
     <div id="step-otp" style="display:none">
-      <div class="login-title">Verificá tu identidad</div>
-      <div class="login-subtitle" id="otp-subtitle">Ingresá el código de 6 dígitos que enviamos a tu email.</div>
-      <div class="otp-inputs">
-        <input class="otp-input" type="text" inputmode="numeric" maxlength="1" id="otp-0" onkeyup="handleOTP(event,0)"/>
-        <input class="otp-input" type="text" inputmode="numeric" maxlength="1" id="otp-1" onkeyup="handleOTP(event,1)"/>
-        <input class="otp-input" type="text" inputmode="numeric" maxlength="1" id="otp-2" onkeyup="handleOTP(event,2)"/>
-        <input class="otp-input" type="text" inputmode="numeric" maxlength="1" id="otp-3" onkeyup="handleOTP(event,3)"/>
-        <input class="otp-input" type="text" inputmode="numeric" maxlength="1" id="otp-4" onkeyup="handleOTP(event,4)"/>
-        <input class="otp-input" type="text" inputmode="numeric" maxlength="1" id="otp-5" onkeyup="handleOTP(event,5)"/>
+      <div style="text-align:center;padding:20px 0">
+        <div style="font-size:48px;margin-bottom:16px">📬</div>
+        <div class="login-title">Revisá tu correo</div>
+        <div class="login-subtitle" id="otp-subtitle" style="margin-bottom:24px">Te enviamos un link de acceso. Hacé click en él para ingresar.</div>
+        <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:14px;font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.6">
+          El link expira en <strong>10 minutos</strong>.<br/>Revisá tu carpeta de spam si no llegó.
+        </div>
       </div>
-      <div class="otp-hint">El código expira en <strong>10 minutos</strong>. Revisá tu carpeta de spam.</div>
-      <button class="btn btn-primary" id="btn-verify-otp" onclick="verifyOTP()">
-        <span id="btn-verify-text">Ingresar</span>
-        <div class="spinner" id="spinner-verify" style="display:none"></div>
-      </button>
       <button class="btn btn-ghost" onclick="backToEmail()">← Cambiar email</button>
       <div id="otp-msg"></div>
     </div>
@@ -1115,16 +1108,18 @@ async function sendOTP() {
   }
 
   try {
-    const { error } = await sbClient.auth.signInWithOtp({ email });
+    const { error } = await sbClient.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: 'https://phenix-leasing.pages.dev/autolease-portal.html' }
+    });
     if (error) throw error;
     setLoading('btn-send-otp', 'btn-send-text', 'spinner-send', false);
     document.getElementById('step-email').style.display = 'none';
     document.getElementById('step-otp').style.display = 'block';
-    document.getElementById('otp-subtitle').textContent = `Enviamos un código de 6 dígitos a ${email}.`;
-    document.getElementById('otp-0').focus();
+    document.getElementById('otp-subtitle').textContent = `Te enviamos un link a ${email}. Hacé click en él para ingresar.`;
   } catch(e) {
     setLoading('btn-send-otp', 'btn-send-text', 'spinner-send', false);
-    showMsg('email-msg', e.message || 'Error al enviar el código.', 'error');
+    showMsg('email-msg', e.message || 'Error al enviar el link.', 'error');
   }
 }
 
@@ -1730,6 +1725,33 @@ async function executeDeposit() {
     else showDepositMsg(e.reason || e.message || 'Error al depositar.', 'error');
   }
 }
+
+// ── Detectar magic link en la URL ────────────────────────────────
+async function handleMagicLink() {
+  if (!sbClient) return;
+  const hash = window.location.hash;
+  if (!hash.includes('access_token')) return;
+
+  try {
+    const { data: { session }, error } = await sbClient.auth.getSession();
+    if (error || !session) return;
+
+    const email = session.user.email;
+    userEmail = email;
+
+    // Limpiar el hash de la URL
+    window.history.replaceState(null, '', window.location.pathname);
+
+    // Cargar datos del contrato
+    const appData = await fetchContratoData(email);
+    loadApp(appData || { contrato: null, cuotas: [], condiciones: [] });
+  } catch(e) {
+    console.error('Error al procesar magic link:', e);
+  }
+}
+
+// Ejecutar al cargar la página
+handleMagicLink();
 
 // Enter en email input
 document.getElementById('email-input').addEventListener('keydown', e => {
