@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Phenix Leasing · Tu próximo auto</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -16,8 +16,8 @@
   --gray2:#e8e8e4;
   --text2:#6b6b6b;
   --text3:#9a9a9a;
-  --sans:'Inter',sans-serif;
-  --display:'Syne',sans-serif;
+  --sans:'DM Sans',sans-serif;
+  --display:'Space Grotesk',sans-serif;
   --radius:14px;
 }
 html{scroll-behavior:smooth}
@@ -254,6 +254,10 @@ footer{
   .field-row{grid-template-columns:1fr}
 }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+  const _sb = supabase.createClient('https://xxscdrwkoutlualpveif.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4c2Nkcndrb3V0bHVhbHB2ZWlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk0MDkyMTcsImV4cCI6MjEwNDk4NTIxN30.BNM3dg0jFTxjNuhlJPLAjMcGBv1ZbkmLOMm_A9wOk68');
+</script>
 </head>
 <body>
 
@@ -633,7 +637,7 @@ footer{
 </footer>
 
 <script>
-function submitForm() {
+async function submitForm() {
   const nombre = document.getElementById('f-nombre').value.trim();
   const email = document.getElementById('f-email').value.trim();
   const telefono = document.getElementById('f-telefono').value.trim();
@@ -653,15 +657,26 @@ function submitForm() {
   btn.disabled = true;
   btn.textContent = 'Enviando...';
 
-  // Simulate API call — replace with your actual endpoint
-  setTimeout(() => {
+  // Guardar lead en Supabase
+  try {
+    const { error } = await _sb.from('leads').insert({
+      nombre,
+      email,
+      telefono,
+      auto_interes: auto,
+      monto_estimado: monto,
+      canal: 'landing',
+      estado: 'nuevo'
+    });
+    if (error) throw error;
     document.getElementById('form-content').style.display = 'none';
     document.getElementById('form-success').style.display = 'block';
-
-    // Here you would send to your CRM/backend:
-    // fetch('/api/leads', { method:'POST', body: JSON.stringify({nombre,email,telefono,auto,monto}) })
-    console.log('Lead:', { nombre, email, telefono, auto, monto });
-  }, 1200);
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = 'Quiero mi cotización →';
+    alert('Hubo un error al enviar. Intentá de nuevo.');
+    console.error(e);
+  }
 }
 
 function toggleFaq(btn) {
