@@ -1026,8 +1026,8 @@ body {
 // ══════════════════════════════════════════════════════════════════
 // CONFIGURACION — reemplazá con tus credenciales de Supabase
 // ══════════════════════════════════════════════════════════════════
-const SUPABASE_URL = 'https://TU-PROYECTO.supabase.co';
-const SUPABASE_ANON_KEY = 'TU-ANON-KEY';
+const SUPABASE_URL = 'https://xxscdrwkoutlualpveif.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4c2Nkcndrb3V0bHVhbHB2ZWlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk0MDkyMTcsImV4cCI6MjEwNDk4NTIxN30.BNM3dg0jFTxjNuhlJPLAjMcGBv1ZbkmLOMm_A9wOk68';
 
 // ══════════════════════════════════════════════════════════════════
 // DATOS DE DEMO (se usan cuando Supabase no está configurado)
@@ -1056,7 +1056,7 @@ const DEMO_DATA = {
     ejecutivo_telefono: '+54 11 5555-1234',
     escrow: {
       activo: false,
-      contrato_address: '0x84157c60058A4DbEB43C420A886229672Eda2c5f',
+      contrato_address: '0xD83e4b9C46f9038506572E9Caf09AD14E27e49cD',
       token: 'USDC',
       total: 10,
       liberado: 0,
@@ -1083,7 +1083,7 @@ const DEMO_DATA = {
 // ══════════════════════════════════════════════════════════════════
 let sbClient = null;
 let userEmail = '';
-let isDemoMode = true;
+let isDemoMode = false;
 
 try {
   if (SUPABASE_URL !== 'https://TU-PROYECTO.supabase.co') {
@@ -1190,28 +1190,91 @@ async function logout() {
 // FETCH DATA FROM SUPABASE
 // ══════════════════════════════════════════════════════════════════
 async function fetchContratoData(email) {
-  // Queries para Supabase - ajustá los nombres de tablas según tu schema
-  const { data: contrato } = await sbClient
-    .from('expedientes')
-    .select('*, escrow(*)')
-    .eq('cliente_email', email)
+  // 1. Obtener usuario
+  const { data: usuario } = await sbClient
+    .from('usuarios')
+    .select('id, nombre, tipo')
+    .eq('email', email)
     .single();
 
-  if (!contrato) return null;
+  if (!usuario) return null;
 
-  const { data: cuotas } = await sbClient
+  // 2. Obtener contrato con vehiculo
+  const { data: contratoRaw } = await sbClient
+    .from('contratos')
+    .select('*, vehiculos(*)')
+    .eq('usuario_id', usuario.id)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (!contratoRaw) return null;
+
+  // 3. Obtener cuotas con adicionales
+  const { data: cuotasRaw } = await sbClient
     .from('cuotas')
-    .select('*, adicionales(*)')
-    .eq('expediente_id', contrato.id)
+    .select('*, adicionales_cuota(*)')
+    .eq('contrato_id', contratoRaw.id)
     .order('numero', { ascending: true });
 
-  const { data: condiciones } = await sbClient
-    .from('condiciones')
+  // 4. Obtener condiciones escrow (solo si aplica)
+  const { data: condicionesRaw } = await sbClient
+    .from('condiciones_escrow')
     .select('*')
-    .eq('expediente_id', contrato.id)
+    .eq('contrato_id', contratoRaw.id)
     .order('index_onchain', { ascending: true });
 
-  return { contrato, cuotas: cuotas || [], condiciones: condiciones || [] };
+  // 5. Mapear al formato que espera el portal
+  const v = contratoRaw.vehiculos;
+  const contrato = {
+    id: contratoRaw.id,
+    cliente_nombre: usuario.nombre,
+    cliente_email: email,
+    auto_descripcion: `${v.marca} ${v.modelo} ${v.anio}`,
+    auto_vin: v.vin,
+    auto_patente: v.patente || '—',
+    estado: contratoRaw.estado,
+    canon_mensual: contratoRaw.canon_mensual,
+    canon_moneda: contratoRaw.moneda,
+    plazo_meses: contratoRaw.plazo_meses,
+    fecha_inicio: contratoRaw.fecha_inicio,
+    fecha_fin: contratoRaw.fecha_fin,
+    valor_vehiculo: v.precio_usd,
+    opcion_compra: contratoRaw.opcion_compra,
+    lessor_nombre: 'Phenix Leasing',
+    ejecutivo: 'Tu ejecutivo',
+    ejecutivo_email: 'info@phenixleasing.com',
+    ejecutivo_telefono: '+54 11 5555-0000',
+    escrow: contratoRaw.tipo === 'escrow_blockchain' && contratoRaw.lease_id_onchain ? {
+      activo: true,
+      contrato_address: contratoRaw.contrato_address_onchain,
+      token: contratoRaw.escrow_token,
+      total: parseFloat(contratoRaw.escrow_monto) || 0,
+      liberado: parseFloat(contratoRaw.escrow_liberado) || 0,
+      bloqueado: parseFloat(contratoRaw.escrow_bloqueado) || 0,
+      lease_id: contratoRaw.lease_id_onchain
+    } : { activo: false }
+  };
+
+  const cuotas = (cuotasRaw || []).map(c => ({
+    numero: c.numero,
+    fecha_vencimiento: c.fecha_vencimiento,
+    monto: c.monto,
+    estado: c.estado,
+    fecha_pago: c.fecha_pago,
+    adicionales: (c.adicionales_cuota || []).map(a => ({ concepto: a.concepto, monto: a.monto }))
+  }));
+
+  const condiciones = (condicionesRaw || []).map(c => ({
+    index: c.index_onchain,
+    descripcion: c.descripcion,
+    porcentaje: c.porcentaje_bps / 100,
+    estado: c.estado,
+    fecha: c.fecha_cumplimiento,
+    monto: c.monto_liberado || 0
+  }));
+
+  return { contrato, cuotas, condiciones };
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -1292,7 +1355,7 @@ function loadApp(data) {
     document.getElementById('deposit-banner').style.display = 'flex';
     document.getElementById('hero-escrow').textContent = '—';
     document.getElementById('hero-escrow-sub').textContent = 'sin activar';
-    window._escrowData = { lease_id: 2, total: 10, token: 'USDC', contrato_address: '0x84157c60058A4DbEB43C420A886229672Eda2c5f' };
+    window._escrowData = { lease_id: 2, total: 10, token: 'USDC', contrato_address: '0xD83e4b9C46f9038506572E9Caf09AD14E27e49cD' };
   }
 
   // Cuotas
@@ -1470,7 +1533,7 @@ function showToast(msg) {
 // ══════════════════════════════════════════════════════════════════
 // DEPOSIT MODAL
 // ══════════════════════════════════════════════════════════════════
-const CONTRACT_ADDRESS = '0x84157c60058A4DbEB43C420A886229672Eda2c5f';
+const CONTRACT_ADDRESS = '0xD83e4b9C46f9038506572E9Caf09AD14E27e49cD';
 const BASE_CHAIN_ID = 8453;
 const BASE_CHAIN_ID_HEX = '0x2105';
 
