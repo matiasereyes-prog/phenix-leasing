@@ -341,16 +341,17 @@ footer{
         </div>
         <div class="field">
           <label class="field-label">Auto de interés</label>
-          <select class="field-select" id="f-auto">
-            <option value="">Seleccioná un modelo</option>
-            <option>Toyota GR86</option>
-            <option>Toyota Corolla Cross</option>
-            <option>Honda Civic</option>
-            <option>Volkswagen Vento</option>
-            <option>Ford Ranger</option>
-            <option>Chevrolet Onix</option>
-            <option>Otro modelo</option>
+          <select class="field-select" id="f-marca" onchange="onMarcaChange()">
+            <option value="">Cargando marcas...</option>
           </select>
+          <input class="field-input" id="f-marca-custom" placeholder="Escribí la marca..." style="display:none;margin-top:8px"/>
+        </div>
+        <div class="field">
+          <label class="field-label">Modelo</label>
+          <select class="field-select" id="f-modelo" onchange="onModeloChange()" style="display:none">
+            <option value="">Seleccioná un modelo...</option>
+          </select>
+          <input class="field-input" id="f-modelo-custom" placeholder="Escribí el modelo..." style="display:none;margin-top:8px"/>
         </div>
         <div class="field">
           <label class="field-label">Monto estimado del vehículo (USD)</label>
@@ -640,11 +641,73 @@ footer{
 </footer>
 
 <script>
+// Cargar modelos disponibles desde Supabase
+let _modelosData = [];
+
+async function cargarModelosLanding() {
+  try {
+    const SUPABASE_URL = 'https://xxscdrwkoutlualpveif.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4c2Nkcndrb3V0bHVhbHB2ZWlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk0MDkyMTcsImV4cCI6MjEwNDk4NTIxN30.BNM3dg0jFTxjNuhlJPLAjMcGBv1ZbkmLOMm_A9wOk68';
+    const res = await fetch(SUPABASE_URL + '/rest/v1/modelos_disponibles?activo=eq.true&order=marca,orden', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    _modelosData = await res.json();
+    const marcas = [...new Set(_modelosData.map(m => m.marca))].sort();
+    const sel = document.getElementById('f-marca');
+    sel.innerHTML = '<option value="">Seleccioná una marca...</option>' +
+      marcas.map(m => '<option value="' + m + '">' + m + '</option>').join('') +
+      '<option value="otra">Otra marca...</option>';
+  } catch(e) {
+    document.getElementById('f-marca').innerHTML = '<option value="">Seleccioná una marca...</option><option value="otra">Otra marca...</option>';
+  }
+}
+
+function onMarcaChange() {
+  const marca = document.getElementById('f-marca').value;
+  const customMarca = document.getElementById('f-marca-custom');
+  const modeloSel = document.getElementById('f-modelo');
+  const customModelo = document.getElementById('f-modelo-custom');
+
+  if (marca === 'otra') {
+    customMarca.style.display = 'block';
+    modeloSel.style.display = 'none';
+    customModelo.style.display = 'block';
+    customMarca.focus();
+    return;
+  }
+
+  customMarca.style.display = 'none';
+  customModelo.style.display = 'none';
+
+  if (!marca) { modeloSel.style.display = 'none'; return; }
+
+  const modelos = _modelosData.filter(m => m.marca === marca);
+  modeloSel.innerHTML = '<option value="">Seleccioná un modelo...</option>' +
+    modelos.map(m => '<option value="' + m.modelo + '">' + m.modelo + '</option>').join('') +
+    '<option value="otro">Otro modelo...</option>';
+  modeloSel.style.display = 'block';
+}
+
+function onModeloChange() {
+  const modelo = document.getElementById('f-modelo').value;
+  const customModelo = document.getElementById('f-modelo-custom');
+  if (modelo === 'otro') { customModelo.style.display = 'block'; customModelo.focus(); }
+  else { customModelo.style.display = 'none'; }
+}
+
+document.addEventListener('DOMContentLoaded', cargarModelosLanding);
+
 async function submitForm() {
   const nombre = document.getElementById('f-nombre').value.trim();
   const email = document.getElementById('f-email').value.trim();
   const telefono = document.getElementById('f-telefono').value.trim();
-  const auto = document.getElementById('f-auto').value;
+  const marca = document.getElementById('f-marca-custom').style.display !== 'none'
+      ? document.getElementById('f-marca-custom').value.trim()
+      : document.getElementById('f-marca').value;
+    const modelo = document.getElementById('f-modelo-custom').style.display !== 'none'
+      ? document.getElementById('f-modelo-custom').value.trim()
+      : document.getElementById('f-modelo').value;
+    const auto = marca && modelo ? marca + ' ' + modelo : (marca || modelo || '');
   const monto = document.getElementById('f-monto').value;
 
   if (!nombre || !email || !telefono || !auto || !monto) {
