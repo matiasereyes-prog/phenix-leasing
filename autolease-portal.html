@@ -5,33 +5,37 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>AutoLease · Mi Contrato</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
 /* ── TOKENS ──────────────────────────────────────────────────────── */
 :root {
-  --bg:        #faf9f7;
-  --bg2:       #f2f0ed;
+  --bg:        #f7f7f7;
+  --bg2:       #ededed;
   --surface:   #ffffff;
-  --surface2:  #f7f5f2;
-  --border:    #e8e4de;
-  --border2:   #d4cfc8;
-  --accent:    #ff6b6b;
-  --accent2:   #e55555;
-  --accent-bg: #fff0f0;
-  --green:     #00a651;
-  --green-bg:  #e8f7ee;
-  --yellow:    #f59e0b;
-  --yellow-bg: #fff8e7;
-  --red:       #e53e3e;
-  --red-bg:    #fff5f5;
-  --blue:      #3366ff;
-  --blue-bg:   #eef2ff;
-  --text:      #111111;
-  --text2:     #555555;
-  --text3:     #999999;
+  --surface2:  #f7f7f7;
+  --border:    #d9d9d9;
+  --border2:   #a0a0a0;
+  --accent:    #0F527C;
+  --accent2:   #0b3e5e;
+  --accent-bg: #e7eef2;
+  --green:     #00e375;
+  --green-bg:  #e5fcf0;
+  --yellow:    #ffca00;
+  --yellow-bg: #fff8e0;
+  --red:       #ff414d;
+  --red-bg:    #ffe9ea;
+  --blue:      #006eff;
+  --blue-bg:   #e6f2ff;
+  --text:      #101010;
+  --text2:     #404040;
+  --text3:     #737373;
   --mono:      'JetBrains Mono', monospace;
-  --sans:      'Inter', sans-serif;
+  --sans:      'Urbanist', sans-serif;
+  --display:   'Poppins', sans-serif;
   --radius:    16px;
   --radius-sm: 10px;
   --shadow:    0 2px 12px rgba(0,0,0,0.06);
@@ -256,7 +260,7 @@ body {
 
 .topbar-logo {
   display: flex; align-items: center; gap: 10px;
-  font-size: 18px; font-weight: 800; color: var(--text); letter-spacing: -0.5px;
+  font-size: 18px; font-weight: 800; color: var(--text); letter-spacing: -0.5px; font-family: var(--display);
 }
 
 .topbar-logo-icon {
@@ -356,7 +360,7 @@ body {
 
 .contrato-auto {
   font-size: 30px; font-weight: 800;
-  color: white; letter-spacing: -0.8px; line-height: 1.1;
+  color: white; letter-spacing: -0.8px; line-height: 1.1; font-family: var(--display);
 }
 
 .contrato-vin {
@@ -489,7 +493,7 @@ body {
 
 .card-title {
   font-size: 15px; font-weight: 700; color: var(--text);
-  display: flex; align-items: center; gap: 8px;
+  display: flex; align-items: center; gap: 8px; font-family: var(--display);
 }
 
 /* ── TABS ─────────────────────────────────────────────────────────── */
@@ -606,7 +610,7 @@ body {
 
 .modal-title {
   font-size: 24px; font-weight: 800; color: var(--text);
-  letter-spacing: -0.5px; margin-bottom: 6px;
+  letter-spacing: -0.5px; margin-bottom: 6px; font-family: var(--display);
 }
 .modal-subtitle { font-size: 14px; color: var(--text2); margin-bottom: 24px; line-height: 1.5; }
 
@@ -676,7 +680,7 @@ body {
   justify-content: space-between; gap: 16px; box-shadow: var(--shadow);
 }
 .banner-text { }
-.banner-title { font-size: 17px; font-weight: 800; color: white; letter-spacing: -0.3px; }
+.banner-title { font-size: 17px; font-weight: 800; color: white; letter-spacing: -0.3px; font-family: var(--display); }
 .banner-desc { font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 4px; }
 .banner-btn {
   background: var(--accent); color: white; border: none;
@@ -737,10 +741,18 @@ body {
     <!-- Step 1: Email -->
     <div id="step-email">
       <div class="login-title">Mi contrato</div>
-      <div class="login-subtitle">Ingresá tu email para acceder al estado de tu leasing y recibir un código de verificación.</div>
+      <div class="login-subtitle" id="login-subtitle">Ingresá tu email para acceder al estado de tu leasing y recibir un código de verificación.</div>
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <button class="btn btn-ghost" id="tab-login-otp" style="flex:1;justify-content:center;display:flex" onclick="switchLoginMode('otp')">Código por email</button>
+        <button class="btn btn-ghost" id="tab-login-pass" style="flex:1;justify-content:center;display:flex" onclick="switchLoginMode('password')">Contraseña</button>
+      </div>
       <div class="field-group">
         <label class="field-label" for="email-input">Email</label>
         <input id="email-input" class="field-input" type="email" placeholder="tu@email.com" autocomplete="email"/>
+      </div>
+      <div class="field-group" id="login-password-group" style="display:none">
+        <label class="field-label" for="password-input">Contraseña</label>
+        <input id="password-input" class="field-input" type="password" placeholder="••••••••" autocomplete="current-password"/>
       </div>
       <button class="btn btn-primary" id="btn-send-otp" onclick="sendOTP()">
         <span id="btn-send-text">Enviar código</span>
@@ -765,6 +777,46 @@ body {
   </div>
 </div>
 
+<!-- ══ MODAL: CAMBIO DE CONTRASEÑA OBLIGATORIO ══════════════════════ -->
+<div id="modal-force-password" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center">
+  <div class="login-card" style="max-width:420px;margin:0">
+    <div class="login-title">Definí tu nueva contraseña</div>
+    <div class="login-subtitle">Por seguridad, tenés que cambiar la contraseña temporal antes de continuar.</div>
+    <div class="field-group">
+      <label class="field-label">Nueva contraseña</label>
+      <input class="field-input" type="password" id="fp-password" placeholder="Mínimo 8 caracteres"/>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Repetir contraseña</label>
+      <input class="field-input" type="password" id="fp-password2" placeholder="Repetí la contraseña"/>
+    </div>
+    <button class="btn btn-primary" id="btn-force-password" onclick="confirmarCambioPassword()">
+      <span id="fp-text">Guardar y continuar</span>
+      <div class="spinner" id="fp-spinner" style="display:none"></div>
+    </button>
+    <div id="fp-msg"></div>
+  </div>
+</div>
+
+<!-- ══ MODAL: SUBIR COMPROBANTE DE CUOTA ═══════════════════════════ -->
+<div class="modal-overlay" id="modal-comprobante-cuota">
+  <div class="modal-card" style="max-width:420px">
+    <div class="modal-title">Subir comprobante — Cuota <span id="mc-numero"></span></div>
+    <div class="login-subtitle" style="margin-bottom:16px">Adjuntá el comprobante de pago. Tu ejecutivo lo va a revisar y confirmar.</div>
+    <input type="hidden" id="mc-cuota-id"/>
+    <div style="border:2px dashed var(--border2);border-radius:var(--radius);padding:22px;text-align:center;margin-bottom:12px;cursor:pointer" onclick="document.getElementById('mc-file').click()">
+      <div style="font-size:24px;margin-bottom:6px">📎</div>
+      <div style="font-size:13px;font-weight:600;color:var(--text)">Elegir archivo</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:2px">PDF, JPG, PNG — máx. 10MB</div>
+      <div id="mc-filename" style="font-size:12px;color:var(--text);margin-top:8px;font-weight:600"></div>
+      <input type="file" id="mc-file" style="display:none" accept=".pdf,.jpg,.jpeg,.png"/>
+    </div>
+    <div id="mc-msg" style="margin-bottom:8px"></div>
+    <button class="btn btn-primary" onclick="subirComprobanteCuota()">Enviar comprobante</button>
+    <button class="btn btn-ghost" onclick="cerrarModalComprobante()">Cancelar</button>
+  </div>
+</div>
+
 <!-- ══ APP ═══════════════════════════════════════════════════════════ -->
 <div id="app-screen">
   <nav class="topbar">
@@ -782,6 +834,14 @@ body {
   </nav>
 
   <div class="main-content">
+
+    <!-- Selector de contratos (solo visible si el cliente tiene mas de uno) -->
+    <div id="contrato-selector-wrap" style="display:none; align-items:center; gap:10px; margin-bottom:16px;">
+      <label for="contrato-select" style="font-size:13px; color:var(--text2, #888);">Contrato:</label>
+      <select id="contrato-select" onchange="cambiarContratoSeleccionado(this.value)"
+        style="padding:8px 12px; border-radius:8px; border:1px solid var(--border, #333); background:var(--surface, #1a1a1a); color:inherit; font-size:14px; cursor:pointer;">
+      </select>
+    </div>
 
     <!-- Hero del contrato -->
     <div class="contrato-hero" id="contrato-hero" style="display:none">
@@ -868,7 +928,7 @@ body {
           + Depositar más fondos
         </button>
         <a id="basescan-link" href="#" target="_blank" style="flex:1;padding:12px;background:var(--blue-bg);color:var(--blue);border:none;border-radius:10px;font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;">
-          Ver en Basescan ↗
+          Ver en <span id="basescan-link-label">Basescan</span> ↗
         </a>
       </div>
       <div class="contract-address">
@@ -894,8 +954,10 @@ body {
       <div style="padding:20px 24px 0">
         <div class="tabs">
           <button class="tab active" onclick="switchTab('cuotas')">Cuotas</button>
-          <button class="tab" onclick="switchTab('condiciones')">Condiciones escrow</button>
-          <button class="tab" onclick="switchTab('info')">Datos del contrato</button>
+          <button class="tab" onclick="abrirLiquidacionFS()">Liquidación ↗</button>
+          <button class="tab" onclick="switchTab('condiciones')">Escrow</button>
+          <button class="tab" onclick="switchTab('documentos')">Documentos</button>
+          <button class="tab" onclick="switchTab('info')">Mi contrato</button>
         </div>
       </div>
 
@@ -915,10 +977,14 @@ body {
               <tr>
                 <th>#</th>
                 <th>Vencimiento</th>
-                <th>Monto</th>
-                <th>Adicionales</th>
-                <th>Fecha de pago</th>
+                <th>Cuota</th>
+                <th>Amortización</th>
+                <th>Interés</th>
+                <th>Seguro</th>
+                <th>Total</th>
                 <th>Estado</th>
+                <th>Fecha pago</th>
+                <th>Comprobante</th>
               </tr>
             </thead>
             <tbody id="cuotas-tbody">
@@ -928,11 +994,137 @@ body {
         </div>
       </div>
 
+      <!-- Tab: Liquidacion -->
+      <div class="tab-panel" id="tab-liquidacion">
+        <div style="padding:0 24px 8px;display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:13px;font-weight:600;color:var(--text2)">Cuadro de amortización</div>
+          <button onclick="exportarLiquidacionPortal()" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;color:var(--text2)">⬇ Excel</button>
+        </div>
+        <div style="overflow-x:auto;padding:0 24px 24px;max-height:480px;overflow-y:auto">
+          <table class="cuotas-table" id="table-liq-portal">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Vencimiento</th>
+                <th>Cuota</th>
+                <th>Amortización</th>
+                <th>Interés</th>
+                <th>IVA</th>
+                <th>Seguro</th>
+                <th>Total</th>
+                <th>Saldo restante</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-liq-portal"></tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- Tab: Condiciones -->
       <div class="tab-panel" id="tab-condiciones">
         <div style="padding:20px 24px">
+
+          <!-- Estado on-chain -->
+          <div id="escrow-onchain-section" style="display:none">
+            <div style="background:var(--black);border-radius:16px;padding:20px;margin-bottom:16px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+                <div style="font-size:13px;font-weight:700;color:white;display:flex;align-items:center;gap:8px">
+                  ⛓ Estado on-chain · Base Network
+                  <div class="badge badge-blue">En tiempo real</div>
+                </div>
+                <button onclick="refreshEscrowOnchain()" style="background:rgba(255,255,255,0.1);border:none;color:white;border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer">↻ Actualizar</button>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px">
+                <div>
+                  <div style="font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">Total depositado</div>
+                  <div style="font-size:20px;font-weight:800;color:white;font-family:monospace" id="oc-total">—</div>
+                </div>
+                <div>
+                  <div style="font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">Liberado</div>
+                  <div style="font-size:20px;font-weight:800;color:#4ade80;font-family:monospace" id="oc-liberado">—</div>
+                </div>
+                <div>
+                  <div style="font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">Bloqueado</div>
+                  <div style="font-size:20px;font-weight:800;color:#fbbf24;font-family:monospace" id="oc-bloqueado">—</div>
+                </div>
+              </div>
+              <div style="margin-bottom:16px">
+                <div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:5px">
+                  <span>PROGRESO</span><span id="oc-pct">0%</span>
+                </div>
+                <div style="width:100%;height:8px;background:rgba(255,255,255,0.1);border-radius:4px;overflow:hidden">
+                  <div id="oc-progress" style="height:100%;background:linear-gradient(90deg,#3366ff,#4ade80);border-radius:4px;width:0%;transition:width 0.8s"></div>
+                </div>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button onclick="openDepositModal()" style="background:var(--accent);color:white;border:none;border-radius:8px;padding:9px 18px;font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer">+ Depositar fondos</button>
+                <a id="oc-basescan-link" href="#" target="_blank" style="background:rgba(255,255,255,0.1);color:white;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center">Ver en <span id="oc-basescan-link-label">Basescan</span> ↗</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sin escrow -->
+          <div id="escrow-no-onchain" style="display:none">
+            <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:24px;text-align:center;margin-bottom:16px">
+              <div style="font-size:32px;margin-bottom:10px">📄</div>
+              <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px">Leasing tradicional</div>
+              <div style="font-size:13px;color:var(--text2)">Tu contrato no tiene escrow blockchain.</div>
+            </div>
+          </div>
+
+          <!-- Condiciones -->
+          <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px">Condiciones de liberación</div>
           <div id="condiciones-list">
             <div class="empty-state"><div class="empty-state-icon">🔒</div><div class="empty-state-text">Sin condiciones registradas.</div></div>
+          </div>
+
+          <!-- Historial on-chain -->
+          <div style="margin-top:20px">
+            <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px">Historial de transacciones</div>
+            <div id="escrow-historial">
+              <div style="font-size:13px;color:var(--text3);text-align:center;padding:16px">Conectá tu wallet para ver el historial on-chain.</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <!-- Tab: Documentos -->
+      <div class="tab-panel" id="tab-documentos">
+        <div style="padding:0 24px 24px">
+          <div style="margin-bottom:20px">
+            <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px">Mis documentos</div>
+            <div style="font-size:13px;color:var(--text2)">Subí tu documentación para completar el legajo.</div>
+          </div>
+
+          <!-- Upload area -->
+          <div style="border:2px dashed var(--border2);border-radius:var(--radius);padding:28px;text-align:center;margin-bottom:20px;cursor:pointer;transition:all 0.2s" id="upload-area" onclick="document.getElementById('file-input').click()" onmouseover="this.style.borderColor='var(--text)'" onmouseout="this.style.borderColor='var(--border2)'">
+            <div style="font-size:28px;margin-bottom:8px">📎</div>
+            <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px">Subir documento</div>
+            <div style="font-size:12px;color:var(--text3)">PDF, JPG, PNG — máx. 10MB</div>
+            <input type="file" id="file-input" style="display:none" accept=".pdf,.jpg,.jpeg,.png" onchange="subirDocumento(this)"/>
+          </div>
+
+          <!-- Tipo de documento -->
+          <div style="margin-bottom:16px">
+            <label style="display:block;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Tipo de documento</label>
+            <select id="tipo-documento" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-family:var(--sans);font-size:14px;color:var(--text);outline:none">
+              <option value="dni">DNI</option>
+              <option value="recibo_sueldo">Recibo de sueldo</option>
+              <option value="afip">Constancia AFIP</option>
+              <option value="estatuto">Estatuto / Poder</option>
+              <option value="balance">Balance</option>
+              <option value="seguro">Póliza de seguro</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+
+          <div id="upload-msg" style="margin-bottom:16px"></div>
+
+          <!-- Lista de documentos -->
+          <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px">Documentos subidos</div>
+          <div id="lista-documentos">
+            <div style="text-align:center;padding:24px;color:var(--text3);font-size:13px">Sin documentos subidos aún</div>
           </div>
         </div>
       </div>
@@ -940,16 +1132,82 @@ body {
       <!-- Tab: Info del contrato -->
       <div class="tab-panel" id="tab-info">
         <div style="padding:20px 24px">
-          <div class="info-grid" id="info-grid">
-            <div class="empty-state"><div class="empty-state-text">Cargando...</div></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+            <div style="font-size:15px;font-weight:700;color:var(--text)">Mi contrato</div>
+            <button onclick="descargarContratoPDF()" style="background:var(--text);color:white;border:none;border-radius:10px;padding:10px 20px;font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer">📄 Descargar PDF</button>
+          </div>
+          <div id="info-contrato-grid" class="detail-grid-portal">
+            <div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-text">Cargando datos del contrato...</div></div>
           </div>
         </div>
       </div>
-    </div>
 
+
+<!-- ══ LIQUIDACION FULLSCREEN PORTAL ══════════════════════════════ -->
+<div class="modal-overlay" id="modal-liq-fs-portal" style="align-items:flex-start;padding:16px;z-index:2000">
+  <div style="background:white;border-radius:16px;padding:24px;width:100%;max-width:100%;max-height:95vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <div style="font-size:17px;font-weight:700;color:var(--text)">Cuadro de amortización</div>
+      <div style="display:flex;gap:8px">
+        <button onclick="exportarLiquidacionPortal()" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer">⬇ Excel</button>
+        <button onclick="document.getElementById('modal-liq-fs-portal').classList.remove('show');document.body.style.overflow=''" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:8px 14px;font-size:16px;cursor:pointer">✕</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;min-width:900px" id="table-liq-fs-portal">
+        <thead>
+          <tr style="border-bottom:2px solid var(--border)">
+            <th style="text-align:left;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;padding:10px 12px;white-space:nowrap">#</th>
+            <th style="text-align:left;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;padding:10px 12px;white-space:nowrap">Vencimiento</th>
+            <th style="text-align:left;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;padding:10px 12px;white-space:nowrap">Cuota</th>
+            <th style="text-align:left;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;padding:10px 12px;white-space:nowrap">Amortización</th>
+            <th style="text-align:left;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;padding:10px 12px;white-space:nowrap">Interés</th>
+            <th style="text-align:left;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;padding:10px 12px;white-space:nowrap">IVA</th>
+            <th style="text-align:left;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;padding:10px 12px;white-space:nowrap">Seguro</th>
+            <th style="text-align:left;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;padding:10px 12px;white-space:nowrap">Total</th>
+            <th style="text-align:left;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;padding:10px 12px;white-space:nowrap">Saldo restante</th>
+            <th style="text-align:left;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;padding:10px 12px;white-space:nowrap">Estado</th>
+            <th style="text-align:left;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;padding:10px 12px;white-space:nowrap">Fecha pago</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-liq-fs-portal"></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
+<!-- ══ LIQUIDACION FULLSCREEN PORTAL ══════════════════════════════ -->
+<div class="modal-overlay" id="modal-liq-fs-portal" style="align-items:flex-start;padding:16px;z-index:2000">
+  <div style="background:white;border-radius:16px;padding:24px;width:100%;max-width:100%;max-height:95vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <div style="font-size:17px;font-weight:700;color:var(--text)">Cuadro de amortización</div>
+      <div style="display:flex;gap:8px">
+        <button onclick="exportarLiquidacionPortal()" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer">⬇ Excel</button>
+        <button onclick="closeModal('modal-liq-fs-portal')" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:8px 14px;font-size:16px;cursor:pointer">✕</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;min-width:900px">
+        <thead>
+          <tr style="border-bottom:2px solid var(--border)">
+            <th style="text-align:left;font-size:11px;font-weight:700;color:var(--text3);padding:10px 12px;white-space:nowrap">#</th>
+            <th style="text-align:left;font-size:11px;font-weight:700;color:var(--text3);padding:10px 12px;white-space:nowrap">Vencimiento</th>
+            <th style="text-align:left;font-size:11px;font-weight:700;color:var(--text3);padding:10px 12px;white-space:nowrap">Cuota</th>
+            <th style="text-align:left;font-size:11px;font-weight:700;color:var(--text3);padding:10px 12px;white-space:nowrap">Amortización</th>
+            <th style="text-align:left;font-size:11px;font-weight:700;color:var(--text3);padding:10px 12px;white-space:nowrap">Interés</th>
+            <th style="text-align:left;font-size:11px;font-weight:700;color:var(--text3);padding:10px 12px;white-space:nowrap">IVA</th>
+            <th style="text-align:left;font-size:11px;font-weight:700;color:var(--text3);padding:10px 12px;white-space:nowrap">Seguro</th>
+            <th style="text-align:left;font-size:11px;font-weight:700;color:var(--text3);padding:10px 12px;white-space:nowrap">Total</th>
+            <th style="text-align:left;font-size:11px;font-weight:700;color:var(--text3);padding:10px 12px;white-space:nowrap">Saldo restante</th>
+            <th style="text-align:left;font-size:11px;font-weight:700;color:var(--text3);padding:10px 12px;white-space:nowrap">Estado</th>
+            <th style="text-align:left;font-size:11px;font-weight:700;color:var(--text3);padding:10px 12px;white-space:nowrap">Fecha pago</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-liq-fs-portal"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
 
 <!-- ══ DEPOSIT MODAL ══════════════════════════════════════════════════ -->
 <div class="modal-overlay" id="deposit-modal">
@@ -1085,6 +1343,108 @@ try {
   }
 } catch(e) { console.warn('Supabase no configurado, usando modo demo'); }
 
+const EDGE_USERS_URL = 'https://xxscdrwkoutlualpveif.supabase.co/functions/v1/swift-service';
+
+async function edgeUsersPortal(action, payload = {}) {
+  const { data: { session } } = await sbClient.auth.getSession();
+  if (!session) throw new Error('Sin sesión');
+  const res = await fetch(EDGE_USERS_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + session.access_token,
+      'apikey': SUPABASE_ANON_KEY
+    },
+    body: JSON.stringify({ action, ...payload })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Edge Function error: ' + res.status);
+  }
+  return await res.json();
+}
+
+let loginMode = 'otp';
+function switchLoginMode(mode) {
+  loginMode = mode;
+  document.getElementById('tab-login-otp').classList.toggle('btn-primary', mode === 'otp');
+  document.getElementById('tab-login-otp').classList.toggle('btn-ghost', mode !== 'otp');
+  document.getElementById('tab-login-pass').classList.toggle('btn-primary', mode === 'password');
+  document.getElementById('tab-login-pass').classList.toggle('btn-ghost', mode !== 'password');
+  document.getElementById('login-password-group').style.display = mode === 'password' ? 'block' : 'none';
+  document.getElementById('login-subtitle').textContent = mode === 'password'
+    ? 'Ingresá con tu email y contraseña.'
+    : 'Ingresá tu email para acceder al estado de tu leasing y recibir un código de verificación.';
+  document.getElementById('btn-send-text').textContent = mode === 'password' ? 'Ingresar' : 'Enviar código';
+  document.getElementById('btn-send-otp').onclick = mode === 'password' ? loginWithPassword : sendOTP;
+}
+
+async function loginWithPassword() {
+  const email = document.getElementById('email-input').value.trim();
+  const password = document.getElementById('password-input').value;
+  if (!email || !password) { showMsg('email-msg', 'Completá email y contraseña.', 'error'); return; }
+  setLoading('btn-send-otp', 'btn-send-text', 'spinner-send', true);
+  try {
+    const { data, error } = await sbClient.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+
+    window._pendingAuthSession = data.session;
+
+    // El cambio de contraseña obligatorio va primero — no debe bloquearlo el vencimiento
+    if (data.user?.user_metadata?.must_change_password) {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('modal-force-password').style.display = 'flex';
+      return;
+    }
+
+    const { data: usuario } = await sbClient.from('usuarios').select('reauth_required_at').eq('email', email).maybeSingle();
+    const vencido = !usuario?.reauth_required_at || new Date(usuario.reauth_required_at) < new Date();
+    if (vencido) {
+      await sbClient.auth.signOut();
+      showMsg('email-msg', '⏱️ Tu acceso por contraseña venció. Pedí el código por email para renovarlo.', 'error');
+      switchLoginMode('otp');
+      return;
+    }
+
+    userEmail = email;
+    const appData = await fetchContratoData(email);
+    loadApp(appData || { contrato: null, cuotas: [], condiciones: [] });
+  } catch(e) {
+    showMsg('email-msg', e.message === 'Invalid login credentials' ? 'Email o contraseña incorrectos.' : (e.message || 'Error al ingresar.'), 'error');
+  } finally {
+    setLoading('btn-send-otp', 'btn-send-text', 'spinner-send', false);
+  }
+}
+
+async function confirmarCambioPassword() {
+  const p1 = document.getElementById('fp-password').value;
+  const p2 = document.getElementById('fp-password2').value;
+  if (!p1 || p1.length < 8) { document.getElementById('fp-msg').innerHTML = '<div class="login-error">La contraseña debe tener al menos 8 caracteres.</div>'; return; }
+  if (p1 !== p2) { document.getElementById('fp-msg').innerHTML = '<div class="login-error">Las contraseñas no coinciden.</div>'; return; }
+  document.getElementById('btn-force-password').disabled = true;
+  document.getElementById('fp-text').style.display = 'none';
+  document.getElementById('fp-spinner').style.display = 'inline-block';
+  try {
+    const pending = window._pendingAuthSession;
+    if (!pending?.access_token) throw new Error('Se perdió la sesión. Volvé a loguearte con la contraseña temporal e intentá de nuevo enseguida.');
+    await sbClient.auth.setSession({ access_token: pending.access_token, refresh_token: pending.refresh_token });
+
+    const { error } = await sbClient.auth.updateUser({ password: p1, data: { must_change_password: false } });
+    if (error) throw error;
+    document.getElementById('modal-force-password').style.display = 'none';
+    const { data: { session: newSession } } = await sbClient.auth.getSession();
+    userEmail = newSession.user.email;
+    const appData = await fetchContratoData(userEmail);
+    loadApp(appData || { contrato: null, cuotas: [], condiciones: [] });
+  } catch(e) {
+    document.getElementById('fp-msg').innerHTML = `<div class="login-error">${e.message}</div>`;
+  } finally {
+    document.getElementById('btn-force-password').disabled = false;
+    document.getElementById('fp-text').style.display = 'inline';
+    document.getElementById('fp-spinner').style.display = 'none';
+  }
+}
+
 // ══════════════════════════════════════════════════════════════════
 // AUTH — LOGIN
 // ══════════════════════════════════════════════════════════════════
@@ -1093,6 +1453,14 @@ async function sendOTP() {
   if (!email || !email.includes('@')) {
     showMsg('email-msg', 'Ingresá un email válido.', 'error');
     return;
+  }
+  // Verificar si el email está registrado en el sistema
+  if (sbClient) {
+    const { data: usuario } = await sbClient.from('usuarios').select('id').eq('email', email).single();
+    if (!usuario) {
+      showMsg('email-msg', '⚠️ Ese email no está registrado. Contactá a tu ejecutivo de ventas.', 'error');
+      return;
+    }
   }
   userEmail = email;
   setLoading('btn-send-otp', 'btn-send-text', 'spinner-send', true);
@@ -1156,6 +1524,7 @@ async function verifyOTP() {
     const { data, error } = await sbClient.auth.verifyOtp({ email: userEmail, token: code, type: 'email' });
     if (error) throw error;
     setLoading('btn-verify-otp', 'btn-verify-text', 'spinner-verify', false);
+    edgeUsersPortal('renovar_reauth').catch(() => {}); // renueva 3 días de acceso por contraseña, en segundo plano
     const appData = await fetchContratoData(userEmail);
     loadApp(appData);
   } catch(e) {
@@ -1177,6 +1546,7 @@ async function logout() {
   document.getElementById('login-screen').style.display = 'flex';
   document.querySelectorAll('.otp-input').forEach(i => i.value = '');
   document.getElementById('email-input').value = '';
+  document.getElementById('password-input').value = '';
   document.getElementById('step-email').style.display = 'block';
   document.getElementById('step-otp').style.display = 'none';
 }
@@ -1184,26 +1554,37 @@ async function logout() {
 // ══════════════════════════════════════════════════════════════════
 // FETCH DATA FROM SUPABASE
 // ══════════════════════════════════════════════════════════════════
-async function fetchContratoData(email) {
+async function fetchContratoData(email, contratoId) {
   // 1. Obtener usuario
   const { data: usuario } = await sbClient
     .from('usuarios')
-    .select('id, nombre, tipo')
+    .select('id, nombre, tipo, telefono')
     .eq('email', email)
     .single();
 
   if (!usuario) return null;
 
-  // 2. Obtener contrato con vehiculo
-  const { data: contratoRaw } = await sbClient
+  // 2. Obtener TODOS los contratos del usuario (puede tener mas de uno)
+  const { data: contratosRaw } = await sbClient
     .from('contratos')
     .select('*, vehiculos(*)')
     .eq('usuario_id', usuario.id)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single();
+    .order('created_at', { ascending: false });
 
-  if (!contratoRaw) return null;
+  if (!contratosRaw || contratosRaw.length === 0) return null;
+
+  // Si se pide un contrato especifico (selector), lo buscamos; si no, el mas reciente
+  const contratoRaw = contratoId
+    ? (contratosRaw.find(c => c.id === contratoId) || contratosRaw[0])
+    : contratosRaw[0];
+
+  // Lista liviana para el selector de contratos (solo si el cliente tiene mas de uno)
+  const contratosList = contratosRaw.map(c => ({
+    id: c.id,
+    auto_descripcion: c.vehiculos ? `${c.vehiculos.marca} ${c.vehiculos.modelo} ${c.vehiculos.anio}` : `Contrato #${c.id}`,
+    estado: c.estado,
+    created_at: c.created_at
+  }));
 
   // 3. Obtener cuotas con adicionales
   const { data: cuotasRaw } = await sbClient
@@ -1211,6 +1592,18 @@ async function fetchContratoData(email) {
     .select('*, adicionales_cuota(*)')
     .eq('contrato_id', contratoRaw.id)
     .order('numero', { ascending: true });
+
+  // 3.1 Comprobantes de pago ya subidos, para saber el estado por cuota
+  const cuotaIds = (cuotasRaw || []).map(c => c.id);
+  const { data: comprobantesRaw } = await sbClient.from('documentos')
+    .select('observacion, estado')
+    .eq('usuario_id', usuario.id)
+    .eq('tipo', 'comprobante_pago');
+  const comprobantePorCuota = {};
+  (comprobantesRaw || []).forEach(d => {
+    const match = cuotaIds.find(id => d.observacion && d.observacion.includes(id));
+    if (match) comprobantePorCuota[match] = d.estado;
+  });
 
   // 4. Obtener condiciones escrow (solo si aplica)
   const { data: condicionesRaw } = await sbClient
@@ -1229,6 +1622,7 @@ async function fetchContratoData(email) {
     auto_vin: v.vin,
     auto_patente: v.patente || '—',
     estado: contratoRaw.estado,
+    tipo: contratoRaw.tipo,
     canon_mensual: contratoRaw.canon_mensual,
     canon_moneda: contratoRaw.moneda,
     plazo_meses: contratoRaw.plazo_meses,
@@ -1236,10 +1630,21 @@ async function fetchContratoData(email) {
     fecha_fin: contratoRaw.fecha_fin,
     valor_vehiculo: v.precio_usd,
     opcion_compra: contratoRaw.opcion_compra,
-    lessor_nombre: 'Phenix Leasing',
-    ejecutivo: 'Tu ejecutivo',
-    ejecutivo_email: 'info@phenixleasing.com',
-    ejecutivo_telefono: '+54 11 5555-0000',
+    // Financieros (mismos campos que ve el equipo en el backend)
+    tasa_anual: contratoRaw.tasa_anual,
+    valor_contrato: contratoRaw.valor_contrato,
+    precio_bien: contratoRaw.precio_bien,
+    garantia: contratoRaw.garantia,
+    // Tomador
+    cuit_tomador: contratoRaw.cuit_tomador,
+    domicilio_tomador: contratoRaw.domicilio_tomador,
+    representante_tomador: contratoRaw.representante_tomador,
+    dni_representante: contratoRaw.dni_representante,
+    cliente_telefono: usuario.telefono,
+    // Bien
+    destino_bien: contratoRaw.destino_bien,
+    domicilio_radicacion: contratoRaw.domicilio_radicacion,
+    aseguradora: contratoRaw.aseguradora,
     escrow: contratoRaw.tipo === 'escrow_blockchain' && contratoRaw.lease_id_onchain ? {
       activo: true,
       contrato_address: contratoRaw.contrato_address_onchain,
@@ -1247,16 +1652,23 @@ async function fetchContratoData(email) {
       total: parseFloat(contratoRaw.escrow_monto) || 0,
       liberado: parseFloat(contratoRaw.escrow_liberado) || 0,
       bloqueado: parseFloat(contratoRaw.escrow_bloqueado) || 0,
-      lease_id: contratoRaw.lease_id_onchain
+      lease_id: contratoRaw.lease_id_onchain,
+      red: contratoRaw.escrow_red || 'base'
     } : { activo: false }
   };
 
   const cuotas = (cuotasRaw || []).map(c => ({
+    id: c.id,
+    contrato_id: c.contrato_id,
     numero: c.numero,
     fecha_vencimiento: c.fecha_vencimiento,
     monto: c.monto,
+    capital: c.capital,
+    interes: c.interes,
+    saldo_restante: c.saldo_restante,
     estado: c.estado,
     fecha_pago: c.fecha_pago,
+    comprobante_estado: comprobantePorCuota[c.id] || null,
     adicionales: (c.adicionales_cuota || []).map(a => ({ concepto: a.concepto, monto: a.monto }))
   }));
 
@@ -1269,12 +1681,34 @@ async function fetchContratoData(email) {
     monto: c.monto_liberado || 0
   }));
 
-  return { contrato, cuotas, condiciones };
+  return { contrato, cuotas, condiciones, contratosList };
 }
 
 // ══════════════════════════════════════════════════════════════════
 // LOAD APP
 // ══════════════════════════════════════════════════════════════════
+// SELECTOR DE CONTRATOS (para clientes con mas de un contrato)
+function renderContratoSelector(list, currentId) {
+  const wrap = document.getElementById('contrato-selector-wrap');
+  if (!wrap) return;
+  if (!list || list.length <= 1) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'flex';
+  const select = document.getElementById('contrato-select');
+  select.innerHTML = list.map(c =>
+    `<option value="${c.id}" ${c.id === currentId ? 'selected' : ''}>${c.auto_descripcion} \u2014 ${c.estado}</option>`
+  ).join('');
+}
+
+async function cambiarContratoSeleccionado(contratoId) {
+  // contratos.id es uuid (texto), NO parsear como numero
+  if (!userEmail || !contratoId) return;
+  if (typeof showToast === 'function') showToast('Cargando contrato...');
+  const appData = await fetchContratoData(userEmail, contratoId);
+  if (!appData) return;
+  window._contratoData = appData;
+  loadApp(appData);
+}
+
 let allCuotas = [];
 
 function loadApp(data) {
@@ -1286,7 +1720,8 @@ function loadApp(data) {
     return;
   }
 
-  const { contrato, cuotas, condiciones } = data;
+  const { contrato, cuotas, condiciones, contratosList } = data;
+  renderContratoSelector(contratosList, contrato.id);
 
   // User chip
   const nombre = contrato.cliente_nombre || userEmail;
@@ -1342,15 +1777,26 @@ function loadApp(data) {
     document.getElementById('escrow-pct-label').textContent = `${pct}%`;
     document.getElementById('escrow-address').textContent = esc.contrato_address;
     document.getElementById('escrow-address').dataset.address = esc.contrato_address;
+    document.getElementById('escrow-address').dataset.red = esc.red || 'base';
     const bsLink = document.getElementById('basescan-link');
-    if (bsLink) bsLink.href = `https://basescan.org/address/${esc.contrato_address}`;
+    if (bsLink) bsLink.href = explorerAddressPortal(esc.red, esc.contrato_address);
+    const bsLabel = document.getElementById('basescan-link-label');
+    if (bsLabel) bsLabel.textContent = (esc.red === 'bsc') ? 'BscScan' : 'Basescan';
     setTimeout(() => { document.getElementById('escrow-progress').style.width = pct + '%'; }, 300);
-  } else {
+  } else if (contrato.tipo === 'escrow_blockchain') {
+    // Es un contrato de tipo escrow pero todavía no tiene lease_id_onchain
+    // (falta registrarlo en el contrato) — no hay datos reales para mostrar el depósito.
     document.getElementById('no-escrow-card').style.display = 'block';
-    document.getElementById('deposit-banner').style.display = 'flex';
     document.getElementById('hero-escrow').textContent = '—';
-    document.getElementById('hero-escrow-sub').textContent = 'sin activar';
-    window._escrowData = { lease_id: 2, total: 10, token: 'USDC', contrato_address: '0xD83e4b9C46f9038506572E9Caf09AD14E27e49cD' };
+    document.getElementById('hero-escrow-sub').textContent = 'sin registrar on-chain';
+    window._escrowData = null;
+  } else {
+    // Contrato tradicional, no aplica escrow
+    document.getElementById('no-escrow-card').style.display = 'none';
+    document.getElementById('deposit-banner').style.display = 'none';
+    document.getElementById('hero-escrow').textContent = '—';
+    document.getElementById('hero-escrow-sub').textContent = 'no aplica';
+    window._escrowData = null;
   }
 
   // Cuotas
@@ -1359,9 +1805,6 @@ function loadApp(data) {
 
   // Condiciones
   renderCondiciones(condiciones, esc);
-
-  // Info
-  renderInfo(contrato);
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -1370,33 +1813,115 @@ function loadApp(data) {
 function renderCuotas(cuotas) {
   const tbody = document.getElementById('cuotas-tbody');
   if (!cuotas || cuotas.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-text">No hay cuotas registradas.</div></div></td></tr>`;
+    tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-text">No hay cuotas registradas.</div></div></td></tr>';
     return;
   }
 
-  tbody.innerHTML = cuotas.map(c => {
-    const estadoBadge = {
-      paga:      `<div class="badge badge-green"><div class="dot"></div>Paga</div>`,
-      pendiente: `<div class="badge badge-yellow"><div class="dot"></div>Pendiente</div>`,
-      vencida:   `<div class="badge badge-red"><div class="dot"></div>Vencida</div>`,
-    }[c.estado] || `<div class="badge badge-gray">${c.estado}</div>`;
+  const mon = window._contratoData?.contrato?.canon_moneda || 'USD';
+  const fmt = n => n ? Number(n).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2}) : '—';
+  const estadoMap = { paga: 'cuota-badge-paga', pendiente: 'cuota-badge-pendiente', vencida: 'cuota-badge-vencida' };
 
-    const adicionales = c.adicionales && c.adicionales.length > 0
-      ? `<div class="adicionales-list">${c.adicionales.map(a => `<div class="adicional-item"><div class="adicional-dot"></div>${a.concepto}: ${formatARS(a.monto)}</div>`).join('')}</div>`
-      : `<span style="color:var(--text3);font-size:12px">—</span>`;
+  let html = '';
+  cuotas.forEach(c => {
+    const isPaga = c.estado === 'paga';
+    const cuotaBase = parseFloat(c.monto || 0);
+    const seguro = parseFloat(c.seguro || 0);
+    const adicion = parseFloat(c.adicionales_monto || 0);
+    const total = c.total_con_adicionales || (cuotaBase + seguro + adicion);
 
-    return `<tr>
-      <td><span class="cuota-num">${String(c.numero).padStart(2,'0')}</span></td>
-      <td><span class="fecha-pago">${formatFecha(c.fecha_vencimiento)}</span></td>
-      <td><span class="cuota-monto">${formatARS(c.monto)}</span></td>
-      <td>${adicionales}</td>
-      <td><span class="fecha-pago" style="color:${c.fecha_pago ? 'var(--green)' : 'var(--text3)'}">${c.fecha_pago ? formatFecha(c.fecha_pago) : '—'}</span></td>
-      <td>${estadoBadge}</td>
-    </tr>`;
-  }).join('');
+    html += '<tr class="' + (isPaga ? 'cuota-paga' : '') + '">';
+    html += '<td class="cuota-num">' + String(c.numero).padStart(2,'0') + '</td>';
+    html += '<td class="fecha-pago">' + (c.fecha_vencimiento ? formatDatePortal(c.fecha_vencimiento) : '—') + '</td>';
+    html += '<td class="cuota-monto">' + mon + ' ' + fmt(c.monto) + '</td>';
+    html += '<td style="font-size:12px;color:#3b82f6;font-family:monospace">' + fmt(c.capital) + '</td>';
+    html += '<td style="font-size:12px;color:#f97316;font-family:monospace">' + fmt(c.interes) + '</td>';
+    html += '<td style="font-size:12px;color:#22c55e;font-family:monospace">' + fmt(c.seguro) + '</td>';
+    html += '<td style="font-size:12px;font-weight:800;font-family:monospace">' + mon + ' ' + fmt(total) + '</td>';
+    html += '<td><div class="' + (estadoMap[c.estado] || 'cuota-badge-pendiente') + '">' + c.estado + '</div></td>';
+    html += '<td class="fecha-pago">' + (isPaga && c.fecha_pago ? formatDatePortal(c.fecha_pago) : '—') + '</td>';
+    html += '<td>' + comprobanteCell(c) + '</td>';
+    html += '</tr>';
+  });
+  tbody.innerHTML = html;
 }
 
-let currentFilter = 'todas';
+
+function comprobanteCell(c) {
+  if (c.estado === 'paga') return '<span style="font-size:12px;color:var(--text3)">—</span>';
+  if (c.comprobante_estado === 'aprobado') return '<span style="font-size:11px;color:var(--green);font-weight:700">✓ Aprobado</span>';
+  if (c.comprobante_estado === 'pendiente') return '<span style="font-size:11px;color:#92400e;font-weight:700">⏳ En revisión</span>';
+  if (c.comprobante_estado === 'rechazado') return '<button class="btn-link-comprobante" style="font-size:11px;color:var(--red);font-weight:700;background:none;border:none;cursor:pointer;text-decoration:underline" onclick="abrirModalComprobante(\'' + c.id + '\',' + c.numero + ')">✗ Rechazado — resubir</button>';
+  return '<button style="font-size:11px;color:var(--blue);font-weight:700;background:none;border:none;cursor:pointer;text-decoration:underline" onclick="abrirModalComprobante(\'' + c.id + '\',' + c.numero + ')">📎 Subir comprobante</button>';
+}
+
+function abrirModalComprobante(cuotaId, numero) {
+  document.getElementById('mc-cuota-id').value = cuotaId;
+  document.getElementById('mc-numero').textContent = String(numero).padStart(2,'0');
+  document.getElementById('mc-file').value = '';
+  document.getElementById('mc-filename').textContent = '';
+  document.getElementById('mc-msg').innerHTML = '';
+  document.getElementById('modal-comprobante-cuota').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function cerrarModalComprobante() {
+  document.getElementById('modal-comprobante-cuota').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('change', function(e) {
+  if (e.target.id === 'mc-file') {
+    const file = e.target.files[0];
+    if (file) document.getElementById('mc-filename').textContent = '📎 ' + file.name;
+  }
+});
+
+async function subirComprobanteCuota() {
+  const cuotaId = document.getElementById('mc-cuota-id').value;
+  const numero = document.getElementById('mc-numero').textContent;
+  const file = document.getElementById('mc-file').files[0];
+  const msgEl = document.getElementById('mc-msg');
+
+  if (!file) { msgEl.innerHTML = '<div style="background:var(--red-bg);border:1px solid #fecaca;border-radius:8px;padding:10px 14px;color:var(--red);font-size:13px">Elegí un archivo primero.</div>'; return; }
+  if (file.size > 10 * 1024 * 1024) { msgEl.innerHTML = '<div style="background:var(--red-bg);border:1px solid #fecaca;border-radius:8px;padding:10px 14px;color:var(--red);font-size:13px">El archivo supera los 10MB.</div>'; return; }
+
+  msgEl.innerHTML = '<div style="background:var(--yellow-bg);border:1px solid #fde68a;border-radius:8px;padding:10px 14px;color:#92400e;font-size:13px">Subiendo comprobante...</div>';
+
+  try {
+    const { data: usuario } = await sbClient.from('usuarios').select('id').eq('email', userEmail).maybeSingle();
+    if (!usuario) throw new Error('Usuario no encontrado');
+
+    const contratoId = window._contratoData?.contrato?.id;
+    const ext = file.name.split('.').pop();
+    const path = usuario.id + '/comprobante_cuota_' + cuotaId + '_' + Date.now() + '.' + ext;
+    const { error: uploadError } = await sbClient.storage.from('documentos').upload(path, file);
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = sbClient.storage.from('documentos').getPublicUrl(path);
+
+    const { error: dbError } = await sbClient.from('documentos').insert({
+      usuario_id: usuario.id,
+      contrato_id: contratoId,
+      tipo: 'comprobante_pago',
+      url_storage: publicUrl,
+      observacion: 'Comprobante cuota ' + cuotaId + ' (N° ' + numero + ')',
+      estado: 'pendiente'
+    });
+    if (dbError) throw dbError;
+
+    msgEl.innerHTML = '<div style="background:var(--green-bg);border:1px solid #a7f3d0;border-radius:8px;padding:10px 14px;color:var(--green);font-size:13px">✓ Comprobante enviado. Tu ejecutivo lo va a revisar.</div>';
+    setTimeout(async () => {
+      cerrarModalComprobante();
+      const appData = await fetchContratoData(userEmail);
+      window._contratoData = appData;
+      allCuotas = appData.cuotas;
+      renderCuotas(appData.cuotas);
+    }, 900);
+  } catch(e) {
+    msgEl.innerHTML = '<div style="background:var(--red-bg);border:1px solid #fecaca;border-radius:8px;padding:10px 14px;color:var(--red);font-size:13px">Error: ' + (e.message || 'No se pudo subir el archivo.') + '</div>';
+  }
+}
+
 function filterCuotas(filter, btn) {
   currentFilter = filter;
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -1436,38 +1961,22 @@ function renderCondiciones(condiciones, escrow) {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// INFO DEL CONTRATO
-// ══════════════════════════════════════════════════════════════════
-function renderInfo(contrato) {
-  document.getElementById('info-grid').innerHTML = [
-    ['N° de expediente', contrato.id],
-    ['Estado', contrato.estado?.toUpperCase()],
-    ['Vehículo', contrato.auto_descripcion],
-    ['VIN', contrato.auto_vin],
-    ['Patente', contrato.auto_patente || '—'],
-    ['Dador (lessor)', contrato.lessor_nombre],
-    ['CUIT del dador', contrato.lessor_cuit || '—'],
-    ['Ejecutivo', contrato.ejecutivo || '—'],
-    ['Email ejecutivo', contrato.ejecutivo_email || '—'],
-    ['Teléfono ejecutivo', contrato.ejecutivo_telefono || '—'],
-    ['Canon mensual', formatARS(contrato.canon_mensual) + ' ' + (contrato.canon_moneda || 'ARS')],
-    ['Plazo', contrato.plazo_meses + ' meses'],
-    ['Fecha de inicio', formatFecha(contrato.fecha_inicio)],
-    ['Fecha de fin', formatFecha(contrato.fecha_fin)],
-    ['Valor del vehículo', formatARS(contrato.valor_vehiculo) + ' ARS'],
-    ['Opción de compra', formatARS(contrato.opcion_compra) + ' ARS'],
-  ].map(([k, v]) => `<div class="info-item"><div class="info-key">${k}</div><div class="info-val">${v || '—'}</div></div>`).join('');
-}
-
-// ══════════════════════════════════════════════════════════════════
 // TABS
 // ══════════════════════════════════════════════════════════════════
 function switchTab(tab) {
-  document.querySelectorAll('.tab').forEach((t, i) => {
-    t.classList.toggle('active', ['cuotas','condiciones','info'][i] === tab);
+  if (tab === 'liquidacion') loadLiquidacionPortal();
+  if (tab === 'documentos') loadDocumentosPortal();
+  if (tab === 'condiciones') loadEscrowOnchain();
+  if (tab === 'info') loadInfoContrato();
+
+  document.querySelectorAll('.tab').forEach((b, i) => {
+    b.classList.toggle('active', ['cuotas','liquidacion','condiciones','documentos','info'][i] === tab);
   });
-  document.querySelectorAll('.tab-panel').forEach((p, i) => {
-    p.classList.toggle('active', ['tab-cuotas','tab-condiciones','tab-info'][i] === 'tab-' + tab);
+
+  const tabIds = ['tab-cuotas','tab-liquidacion','tab-condiciones','tab-documentos','tab-info'];
+  tabIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('active', id === 'tab-' + tab);
   });
 }
 
@@ -1512,7 +2021,8 @@ function copyAddress() {
 
 function openBasescan() {
   const addr = document.getElementById('escrow-address').dataset.address;
-  if (addr && addr !== '—') window.open(`https://basescan.org/address/${addr}`, '_blank');
+  const red = document.getElementById('escrow-address').dataset.red || 'base';
+  if (addr && addr !== '—') window.open(explorerAddressPortal(red, addr), '_blank');
 }
 
 let toastTimer;
@@ -1528,9 +2038,52 @@ function showToast(msg) {
 // ══════════════════════════════════════════════════════════════════
 // DEPOSIT MODAL
 // ══════════════════════════════════════════════════════════════════
-const CONTRACT_ADDRESS = '0xD83e4b9C46f9038506572E9Caf09AD14E27e49cD';
-const BASE_CHAIN_ID = 8453;
-const BASE_CHAIN_ID_HEX = '0x2105';
+const NETWORKS_CONFIG_PORTAL = {
+  base: {
+    name: 'Base', chainIdDec: 8453, chainIdHex: '0x2105',
+    rpcUrl: 'https://mainnet.base.org', explorer: 'https://basescan.org',
+    nativeSymbol: 'ETH', contractAddress: '0xD83e4b9C46f9038506572E9Caf09AD14E27e49cD',
+    tokens: {
+      '0x0000000000000000000000000000000000000000': { symbol: 'ETH', decimals: 18 },
+      '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913': { symbol: 'USDC', decimals: 6 },
+      '0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf': { symbol: 'cbBTC', decimals: 8 },
+    }
+  },
+  bsc: {
+    name: 'BNB Smart Chain', chainIdDec: 56, chainIdHex: '0x38',
+    rpcUrl: 'https://bsc-dataseed.binance.org', explorer: 'https://bscscan.com',
+    nativeSymbol: 'BNB', contractAddress: '0xc191880AB13aB8e6387f8857c657c9bFA760263e',
+    tokens: {
+      '0x0000000000000000000000000000000000000000': { symbol: 'BNB', decimals: 18 },
+      '0x608593d17a2decbbc4399e4185be4922f97ed32e': { symbol: 'USDY', decimals: 18 },
+    }
+  }
+};
+function getRedConfigPortal(red) { return NETWORKS_CONFIG_PORTAL[red] || NETWORKS_CONFIG_PORTAL.base; }
+function explorerAddressPortal(red, addr) { return getRedConfigPortal(red).explorer + '/address/' + addr; }
+function explorerTxPortal(red, hash) { return getRedConfigPortal(red).explorer + '/tx/' + hash; }
+async function ensureNetworkPortal(red) {
+  const cfg = getRedConfigPortal(red);
+  const currentChainIdHex = await window.ethereum.request({ method: 'eth_chainId' });
+  if (parseInt(currentChainIdHex, 16) !== cfg.chainIdDec) {
+    try {
+      await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: cfg.chainIdHex }] });
+    } catch(e) {
+      if (e.code === 4902) {
+        await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [{
+          chainId: cfg.chainIdHex, chainName: cfg.name,
+          nativeCurrency: { name: cfg.nativeSymbol, symbol: cfg.nativeSymbol, decimals: 18 },
+          rpcUrls: [cfg.rpcUrl], blockExplorerUrls: [cfg.explorer]
+        }] });
+      } else throw e;
+    }
+  }
+  return cfg;
+}
+// Compat: código legado que referencia estas constantes usa Base por defecto.
+const CONTRACT_ADDRESS = NETWORKS_CONFIG_PORTAL.base.contractAddress;
+const BASE_CHAIN_ID = NETWORKS_CONFIG_PORTAL.base.chainIdDec;
+const BASE_CHAIN_ID_HEX = NETWORKS_CONFIG_PORTAL.base.chainIdHex;
 
 const DEPOSIT_ABI = [
   { inputs: [{ name: "leaseId", type: "uint256" }], name: "depositFunds", outputs: [], stateMutability: "payable", type: "function" },
@@ -1548,21 +2101,24 @@ const TOKENS = {
   '0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf': { symbol: 'cbBTC', decimals: 8  },
 };
 
-let depositState = { step: 'connect', wallet: null, leaseId: null, leaseData: null, needsApprove: false };
+let depositState = { step: 'connect', wallet: null, leaseId: null, leaseData: null, needsApprove: false, contratoId: null };
 
 function openDepositModal() {
+  const esc = window._escrowData;
+  if (!esc) {
+    showToastPortal('Este contrato todavía no tiene un lease registrado on-chain — contactá a tu ejecutivo.');
+    return;
+  }
   const modal = document.getElementById('deposit-modal');
   modal.classList.add('show');
   document.body.style.overflow = 'hidden';
 
-  // Pull lease data from loaded contrato
-  const esc = window._escrowData;
-  if (esc) {
-    document.getElementById('modal-lease-id').textContent = esc.lease_id || '—';
-    document.getElementById('modal-monto').textContent = `${esc.total} ${esc.token}`;
-    document.getElementById('modal-token').textContent = esc.token;
-    depositState.leaseId = esc.lease_id;
-  }
+  document.getElementById('modal-lease-id').textContent = esc.lease_id || '—';
+  document.getElementById('modal-monto').textContent = `${esc.total} ${esc.token}`;
+  document.getElementById('modal-token').textContent = esc.token;
+  depositState.leaseId = esc.lease_id;
+  depositState.contratoId = window._contratoData?.contrato?.id || null;
+  depositState.red = esc.red || 'base';
   resetDepositSteps();
 }
 
@@ -1618,42 +2174,37 @@ async function connectDepositWallet() {
   setDepositLoading(true, 'Conectando...');
   setStepState('step-connect', 'active');
   try {
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    await provider.send('eth_requestAccounts', []);
+    await window.ethereum.request({ method: 'eth_requestAccounts' });
 
-    // Check network
-    const network = await provider.getNetwork();
-    if (Number(network.chainId) !== BASE_CHAIN_ID) {
-      try {
-        await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: BASE_CHAIN_ID_HEX }] });
-      } catch(e) {
-        if (e.code === 4902) {
-          await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [{ chainId: BASE_CHAIN_ID_HEX, chainName: 'Base', nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 }, rpcUrls: ['https://mainnet.base.org'], blockExplorerUrls: ['https://basescan.org'] }] });
-        } else throw e;
-      }
-    }
+    // Chequeamos y cambiamos de red segun a que red pertenece este lease (Base o BSC)
+    // ANTES de crear el provider, para evitar NETWORK_ERROR si la wallet cambia de red
+    // (ethers v6 asume red fija por defecto).
+    const netCfgDep = await ensureNetworkPortal(depositState.red || 'base');
 
+    // Crear el provider recien aca, ya con la red correcta activa
+    const provider = new ethers.BrowserProvider(window.ethereum, "any");
     const signer = await provider.getSigner();
     const address = await signer.getAddress();
     depositState.wallet = address;
 
     // Check if ERC-20 needs approval
-    const contract = new ethers.Contract(CONTRACT_ADDRESS, DEPOSIT_ABI, provider);
-    const lease = await contract.getLease(depositState.leaseId || 1);
+    const contract = new ethers.Contract(netCfgDep.contractAddress, DEPOSIT_ABI, provider);
+    if (!depositState.leaseId) throw new Error("No se encontró el Lease ID del contrato.");
+    const lease = await contract.getLease(depositState.leaseId);
     depositState.leaseData = lease;
 
     const tokenAddr = lease.token.toLowerCase();
-    const isETH = tokenAddr === '0x0000000000000000000000000000000000000000';
+    const isNative = tokenAddr === '0x0000000000000000000000000000000000000000';
 
     setStepState('step-connect', 'done');
-    document.getElementById('step-connect-desc').textContent = address.slice(0,6) + '…' + address.slice(-4) + ' · Base';
+    document.getElementById('step-connect-desc').textContent = address.slice(0,6) + '…' + address.slice(-4) + ' · ' + netCfgDep.name;
 
-    if (!isETH) {
+    if (!isNative) {
       // Need approve step
       document.getElementById('step-approve').style.display = 'flex';
       document.getElementById('step-deposit-num').textContent = '3';
       const tokenContract = new ethers.Contract(lease.token, ERC20_ABI, provider);
-      const allowance = await tokenContract.allowance(address, CONTRACT_ADDRESS);
+      const allowance = await tokenContract.allowance(address, netCfgDep.contractAddress);
       if (allowance < lease.depositAmount) {
         depositState.needsApprove = true;
         depositState.step = 'approve';
@@ -1678,11 +2229,12 @@ async function approveToken() {
   setDepositLoading(true, 'Aprobando...');
   setStepState('step-approve', 'active');
   try {
-    const provider = new ethers.BrowserProvider(window.ethereum);
+    const netCfgAp = getRedConfigPortal(depositState.red);
+    const provider = new ethers.BrowserProvider(window.ethereum, "any");
     const signer = await provider.getSigner();
     const lease = depositState.leaseData;
     const tokenContract = new ethers.Contract(lease.token, ERC20_ABI, signer);
-    const tx = await tokenContract.approve(CONTRACT_ADDRESS, lease.depositAmount);
+    const tx = await tokenContract.approve(netCfgAp.contractAddress, lease.depositAmount);
     await tx.wait();
     setStepState('step-approve', 'done');
     depositState.step = 'deposit';
@@ -1700,23 +2252,35 @@ async function executeDeposit() {
   setDepositLoading(true, 'Firmando...');
   setStepState('step-deposit', 'active');
   try {
-    const provider = new ethers.BrowserProvider(window.ethereum);
+    const netCfgEx = getRedConfigPortal(depositState.red);
+    const provider = new ethers.BrowserProvider(window.ethereum, "any");
     const signer = await provider.getSigner();
-    const contract = new ethers.Contract(CONTRACT_ADDRESS, DEPOSIT_ABI, signer);
+    const contract = new ethers.Contract(netCfgEx.contractAddress, DEPOSIT_ABI, signer);
     const lease = depositState.leaseData;
     const isETH = lease.token.toLowerCase() === '0x0000000000000000000000000000000000000000';
     const tx = await contract.depositFunds(
-      depositState.leaseId || 1,
+      depositState.leaseId,
       isETH ? { value: lease.depositAmount } : {}
     );
     setDepositLoading(true, 'Confirmando en blockchain...');
     await tx.wait();
     setStepState('step-deposit', 'done');
 
+    // Reflejar el depósito en Supabase (self-service, verificado del lado del servidor)
+    try {
+      await edgeUsersPortal('confirmar_deposito', {
+        contratoId: depositState.contratoId,
+        txHash: tx.hash,
+        walletAddress: depositState.wallet
+      });
+    } catch(syncErr) {
+      console.error('No se pudo sincronizar el depósito con Supabase:', syncErr);
+    }
+
     // Success state
     document.getElementById('btn-deposit-action').className = 'deposit-btn success';
     setDepositLoading(false, '✓ Depósito confirmado');
-    showDepositMsg(`Fondos depositados. TX: <a href="https://basescan.org/tx/${tx.hash}" target="_blank" style="color:var(--green);font-family:var(--mono);font-size:11px">${tx.hash.slice(0,20)}…</a>`, 'success');
+    showDepositMsg(`Fondos depositados. TX: <a href="${explorerTxPortal(depositState.red, tx.hash)}" target="_blank" style="color:var(--green);font-family:var(--mono);font-size:11px">${tx.hash.slice(0,20)}…</a>`, 'success');
     setTimeout(() => { closeDepositModal(); showToast('✓ Escrow activado correctamente'); }, 3000);
   } catch(e) {
     setStepState('step-deposit', 'error');
@@ -1737,14 +2301,34 @@ async function handleMagicLink() {
     if (error || !session) return;
 
     const email = session.user.email;
+
+    // Verificar rol del usuario
+    const { data: usuario } = await sbClient
+      .from('usuarios')
+      .select('rol')
+      .eq('email', email)
+      .maybeSingle();
+
+    // Si es admin o ejecutivo, redirigir al backend con el token
+    // Si usuario es null (RLS bloqueó) asumimos lessee y continuamos
+    if (usuario?.rol && ['admin', 'ejecutivo'].includes(usuario.rol)) {
+      // Pasar el hash con el token al backend para que no pida login de nuevo
+      window.location.href = 'https://app.phenixleasing.com' + window.location.hash;
+      return;
+    }
+
     userEmail = email;
 
     // Limpiar el hash de la URL
     window.history.replaceState(null, '', window.location.pathname);
 
+    edgeUsersPortal('renovar_reauth').catch(() => {}); // renueva 3 días de acceso por contraseña, en segundo plano
+
     // Cargar datos del contrato
     const appData = await fetchContratoData(email);
-    loadApp(appData || { contrato: null, cuotas: [], condiciones: [] });
+    const appDataFinal = appData || { contrato: null, cuotas: [], condiciones: [] };
+    window._contratoData = appDataFinal;
+    loadApp(appDataFinal);
   } catch(e) {
     console.error('Error al procesar magic link:', e);
   }
@@ -1752,6 +2336,794 @@ async function handleMagicLink() {
 
 // Ejecutar al cargar la página
 handleMagicLink();
+
+// ══════════════════════════════════════════════════════════════════
+// LIQUIDACION
+// ══════════════════════════════════════════════════════════════════
+async function loadLiquidacionPortal() {
+  if (!sbClient || !userEmail) return;
+  const { data: usuario } = await sbClient.from('usuarios').select('id').eq('email', userEmail).maybeSingle();
+  if (!usuario) return;
+  const { data: contrato } = await sbClient.from('contratos').select('id,moneda').eq('usuario_id', usuario.id).maybeSingle();
+  if (!contrato) return;
+  const { data: cuotas } = await sbClient.from('cuotas').select('*').eq('contrato_id', contrato.id).order('numero', { ascending: true });
+
+  const tbody = document.getElementById('tbody-liq-portal');
+  if (!cuotas || !cuotas.length) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--text3)">Sin cuotas registradas</td></tr>';
+    return;
+  }
+
+  const mon = contrato.moneda || 'USD';
+  const fmt = n => n ? Number(n).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2}) : '—';
+  const estadoColors = { paga: 'badge-green', pendiente: 'badge-gray', vencida: 'badge-red' };
+
+  let html = '';
+  cuotas.forEach(c => {
+    const cuotaBase = parseFloat(c.monto || 0);
+    const seguro = parseFloat(c.seguro || 0);
+    const adicion = parseFloat(c.adicionales_monto || 0);
+    const total = c.total_con_adicionales || (cuotaBase + seguro + adicion);
+    const isPaga = c.estado === 'paga';
+    html += '<tr>';
+    html += '<td class="cuota-num">' + String(c.numero).padStart(2,'0') + '</td>';
+    html += '<td class="fecha-pago">' + (c.fecha_vencimiento ? formatDatePortal(c.fecha_vencimiento) : '—') + '</td>';
+    html += '<td style="font-weight:700;font-family:monospace">' + mon + ' ' + fmt(c.monto) + '</td>';
+    html += '<td style="color:#3b82f6;font-family:monospace">' + fmt(c.capital) + '</td>';
+    html += '<td style="color:#f97316;font-family:monospace">' + fmt(c.interes) + '</td>';
+    html += '<td style="color:#22c55e;font-family:monospace">' + fmt(c.seguro) + '</td>';
+    html += '<td style="font-weight:800;font-family:monospace">' + mon + ' ' + fmt(total) + '</td>';
+    html += '<td style="font-family:monospace">' + fmt(c.saldo_restante) + '</td>';
+    html += '<td><div class="badge ' + (estadoColors[c.estado] || 'badge-gray') + '"><div class="dot"></div>' + c.estado + '</div></td>';
+    html += '</tr>';
+    if (isPaga && c.fecha_pago) {
+      html += '<tr style="background:#f0fdf4"><td colspan="9" style="font-size:11px;color:#22c55e;padding:2px 12px 6px">✓ Pagada el ' + formatDatePortal(c.fecha_pago) + (c.medio_pago ? ' · ' + c.medio_pago : '') + '</td></tr>';
+    }
+  });
+  tbody.innerHTML = html;
+}
+
+
+function formatDatePortal(str) {
+  if (!str) return '—';
+  const [y,m,d] = str.split('-');
+  const meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  return d + ' ' + meses[parseInt(m)-1] + ' ' + y;
+}
+
+async function exportarLiquidacionPortal() {
+  if (!sbClient || !userEmail) return;
+  const { data: usuario } = await sbClient.from('usuarios').select('id').eq('email', userEmail).maybeSingle();
+  if (!usuario) return;
+  const { data: contrato } = await sbClient.from('contratos').select('id,moneda').eq('usuario_id', usuario.id).maybeSingle();
+  if (!contrato) return;
+  const { data: cuotas } = await sbClient.from('cuotas').select('*').eq('contrato_id', contrato.id).order('numero', { ascending: true });
+
+  const data = (cuotas||[]).map(c => ({
+    'N° Cuota': c.numero,
+    'Vencimiento': c.fecha_vencimiento || '—',
+    ['Cuota (' + contrato.moneda + ')']: c.monto,
+    'Capital': c.capital || '—',
+    'Interés': c.interes || '—',
+    'Saldo restante': c.saldo_restante || '—',
+    'Estado': c.estado,
+    'Fecha pago': c.fecha_pago || '—',
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Liquidacion');
+  XLSX.writeFile(wb, 'mi_liquidacion_' + new Date().toISOString().split('T')[0] + '.xlsx');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// DOCUMENTOS
+// ══════════════════════════════════════════════════════════════════
+async function loadDocumentosPortal() {
+  if (!sbClient || !userEmail) return;
+  const { data: usuario } = await sbClient.from('usuarios').select('id').eq('email', userEmail).maybeSingle();
+  if (!usuario) return;
+  const { data: docs } = await sbClient.from('documentos').select('*').eq('usuario_id', usuario.id).order('created_at', { ascending: false });
+
+  const container = document.getElementById('lista-documentos');
+  if (!docs || !docs.length) {
+    container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text3);font-size:13px">Sin documentos subidos aún</div>';
+    return;
+  }
+
+  const tipoLabels = { dni:'DNI', recibo_sueldo:'Recibo de sueldo', afip:'Constancia AFIP', estatuto:'Estatuto/Poder', balance:'Balance', seguro:'Póliza de seguro', otro:'Otro' };
+  const estadoColors = { pendiente:'badge-yellow', aprobado:'badge-green', rechazado:'badge-red' };
+
+  container.innerHTML = docs.map(d => {
+    const nombre = d.url_storage ? d.url_storage.split('/').pop() : 'documento';
+    return '<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:10px;border:1.5px solid var(--border);margin-bottom:8px;background:var(--surface2)">' +
+      '<span style="font-size:20px">📄</span>' +
+      '<div style="flex:1">' +
+        '<div style="font-size:13px;font-weight:600;color:var(--text)">' + (tipoLabels[d.tipo] || d.tipo) + '</div>' +
+        '<div style="font-size:11px;color:var(--text3);margin-top:2px">' + formatDatePortal(d.created_at?.split('T')[0]) + (d.observacion ? ' · ' + d.observacion : '') + '</div>' +
+      '</div>' +
+      '<div class="badge ' + (estadoColors[d.estado] || 'badge-gray') + '">' + d.estado + '</div>' +
+      (d.url_storage ? '<a href="' + d.url_storage + '" target="_blank" style="font-size:12px;color:var(--blue);font-weight:600;text-decoration:none">Ver ↗</a>' : '') +
+    '</div>';
+  }).join('');
+}
+
+async function subirDocumento(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 10 * 1024 * 1024) {
+    document.getElementById('upload-msg').innerHTML = '<div style="background:var(--red-bg);border:1px solid #fecaca;border-radius:8px;padding:10px 14px;color:var(--red);font-size:13px">El archivo supera los 10MB.</div>';
+    return;
+  }
+
+  const tipo = document.getElementById('tipo-documento').value;
+  const msgEl = document.getElementById('upload-msg');
+  msgEl.innerHTML = '<div style="background:var(--yellow-bg);border:1px solid #fde68a;border-radius:8px;padding:10px 14px;color:#92400e;font-size:13px">Subiendo documento...</div>';
+
+  try {
+    const { data: usuario } = await sbClient.from('usuarios').select('id').eq('email', userEmail).maybeSingle();
+    if (!usuario) throw new Error('Usuario no encontrado');
+
+    // Upload to Supabase Storage
+    const ext = file.name.split('.').pop();
+    const path = usuario.id + '/' + tipo + '_' + Date.now() + '.' + ext;
+    const { data: uploaded, error: uploadError } = await sbClient.storage.from('documentos').upload(path, file);
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = sbClient.storage.from('documentos').getPublicUrl(path);
+
+    // Save to documentos table
+    const { error: dbError } = await sbClient.from('documentos').insert({
+      usuario_id: usuario.id,
+      tipo,
+      url_storage: publicUrl,
+      estado: 'pendiente'
+    });
+    if (dbError) throw dbError;
+
+    msgEl.innerHTML = '<div style="background:var(--green-bg);border:1px solid #a7f3d0;border-radius:8px;padding:10px 14px;color:var(--green);font-size:13px">✓ Documento subido correctamente. Será revisado por tu ejecutivo.</div>';
+    input.value = '';
+    loadDocumentosPortal();
+  } catch(e) {
+    msgEl.innerHTML = '<div style="background:var(--red-bg);border:1px solid #fecaca;border-radius:8px;padding:10px 14px;color:var(--red);font-size:13px">Error: ' + (e.message || 'No se pudo subir el archivo.') + '</div>';
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// GENERAR PDF DEL CONTRATO
+// ══════════════════════════════════════════════════════════════════
+async function descargarContratoPDF() {
+  try {
+    const { data: usuarioRow } = await sbClient.from('usuarios').select('id').eq('email', userEmail).single();
+    if (!usuarioRow) { showToastPortal('No se encontró tu usuario'); return; }
+
+    const { data: contrato, error: cErr } = await sbClient.from('contratos')
+      .select('*, usuarios!contratos_usuario_id_fkey(nombre, email, cuit, telefono, tipo), vehiculos(marca, modelo, anio, vin, patente)')
+      .eq('usuario_id', usuarioRow.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (cErr) { showToastPortal('Error: ' + cErr.message); console.error(cErr); return; }
+    if (!contrato) { showToastPortal('No se encontró tu contrato'); return; }
+
+    const { data: cuotas } = await sbClient.from('cuotas')
+      .select('numero, fecha_vencimiento, monto, iva, interes, capital, saldo_restante')
+      .eq('contrato_id', contrato.id).order('numero', { ascending: true });
+
+    const u = contrato.usuarios || {};
+    const v = contrato.vehiculos || {};
+    const mon = contrato.canon_moneda || 'USD';
+    const fmt = n => n ? mon + ' ' + Number(n).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2}) : '—';
+    const fmtFecha = s => s ? new Date(s).toLocaleDateString('es-AR') : '—';
+
+    // Load jsPDF dynamically
+    if (!window.jspdf) {
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+        s.onload = resolve; s.onerror = reject;
+        document.head.appendChild(s);
+      });
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+    const W = 210, H = 297;
+    const ML = 20, MR = 20, MT = 35;
+    const nroContrato = contrato.id.slice(0,8).toUpperCase();
+    const fechaFirma = new Date().toLocaleDateString('es-AR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+
+    const drawHeader = () => {
+      doc.setFillColor(10,10,10);
+      doc.rect(0, 0, W, 22, 'F');
+      doc.setFontSize(14); doc.setFont('helvetica','bold');
+      doc.setTextColor(240,90,40);
+      doc.text('PHENIX', ML, 14);
+      doc.setTextColor(255,255,255);
+      doc.text('LEASING', ML + 22, 14);
+      doc.setFontSize(7); doc.setFont('helvetica','normal');
+      doc.setTextColor(170,170,170);
+      doc.text('CONTRATO DE LEASING', W - MR, 11, { align:'right' });
+      doc.setTextColor(255,255,255);
+      doc.text('N° ' + nroContrato, W - MR, 16, { align:'right' });
+    };
+
+    const drawFooter = (pageNum) => {
+      doc.setFillColor(235,235,232);
+      doc.rect(0, H - 12, W, 12, 'F');
+      doc.setFontSize(7); doc.setFont('helvetica','normal');
+      doc.setTextColor(150,150,150);
+      doc.text('Carlos Pellegrini 1163 piso 10°, CABA — noreply@phenixleasing.com — phenixleasing.com', ML, H - 5);
+      doc.text('Página ' + pageNum, W - MR, H - 5, { align:'right' });
+    };
+
+    const addPage = (pageNum) => {
+      if (pageNum > 1) doc.addPage();
+      drawHeader();
+      drawFooter(pageNum);
+    };
+
+    const label = (x, y, text) => {
+      doc.setFontSize(7); doc.setFont('helvetica','bold');
+      doc.setTextColor(150,150,150);
+      doc.text(text.toUpperCase(), x, y);
+    };
+    const value = (x, y, text, maxW) => {
+      doc.setFontSize(9.5); doc.setFont('helvetica','normal');
+      doc.setTextColor(10,10,10);
+      if (maxW) {
+        const lines = doc.splitTextToSize(String(text), maxW);
+        doc.text(lines, x, y);
+        return lines.length * 4.5;
+      }
+      doc.text(String(text), x, y);
+      return 5;
+    };
+    const sectionTitle = (x, y, text) => {
+      doc.setDrawColor(240,90,40); doc.setLineWidth(0.8);
+      doc.line(ML, y - 2, W - MR, y - 2);
+      doc.setFontSize(9); doc.setFont('helvetica','bold');
+      doc.setTextColor(240,90,40);
+      doc.text(text, x, y + 4);
+      return y + 8;
+    };
+
+    // ── PAGE 1: PORTADA ──────────────────────────────────────────────
+    let pageNum = 1; addPage(pageNum); let y = MT + 6;
+
+    doc.setFontSize(22); doc.setFont('helvetica','bold'); doc.setTextColor(10,10,10);
+    doc.text('CONTRATO DE LEASING', ML, y); y += 8;
+    doc.setFontSize(10); doc.setFont('helvetica','normal'); doc.setTextColor(150,150,150);
+    doc.text('N° ' + nroContrato + '  ·  ' + fechaFirma, ML, y); y += 6;
+    doc.setDrawColor(220,220,215); doc.setLineWidth(0.3);
+    doc.line(ML, y, W - MR, y); y += 8;
+
+    // Summary box
+    doc.setFillColor(245,245,243);
+    doc.rect(ML, y, W - ML - MR, 16, 'F');
+    doc.setDrawColor(224,224,220); doc.setLineWidth(0.3);
+    doc.rect(ML, y, W - ML - MR, 16, 'S');
+    const cols = [ML+2, ML+44, ML+101, ML+136, ML+161];
+    const labels2 = ['TOMADOR','BIEN','VALOR CONTRATO','PLAZO','CANON MENSUAL'];
+    const vals2 = [u.nombre||u.email||'—', v.marca?v.marca+' '+v.modelo+(v.anio?' '+v.anio:''):(contrato.auto_descripcion||'—'), fmt(contrato.valor_contrato||contrato.canon_mensual*contrato.plazo_meses), (contrato.plazo_meses||'—')+' meses', fmt(contrato.canon_mensual)+' + IVA'];
+    cols.forEach((cx, i) => {
+      doc.setFontSize(7); doc.setFont('helvetica','bold'); doc.setTextColor(150,150,150);
+      doc.text(labels2[i], cx, y + 5);
+      doc.setFontSize(8.5); doc.setFont('helvetica','bold'); doc.setTextColor(10,10,10);
+      const maxW2 = i < 4 ? (cols[i+1]||W-MR) - cx - 4 : W - MR - cx;
+      const lines2 = doc.splitTextToSize(vals2[i], maxW2);
+      doc.text(lines2[0]||'', cx, y + 12);
+    }); y += 22;
+
+    // Partes
+    y = sectionTitle(ML, y, 'LAS PARTES') + 2;
+    const partes = [
+      ['DADOR', 'Phenix Leasing S.A.', 'TOMADOR', u.nombre||u.email||'—'],
+      ['CUIT', '30-70883564-8', 'CUIT', u.cuit||'—'],
+      ['REPRESENTANTE', 'Daniel Mario Cardoni', 'REPRESENTANTE', u.nombre||'—'],
+      ['DOMICILIO', 'Carlos Pellegrini 1163 piso 10°, CABA', 'DOMICILIO', '—'],
+    ];
+    partes.forEach(([l1,v1,l2,v2]) => {
+      label(ML, y, l1); value(ML, y+4, v1, 75);
+      label(ML+90, y, l2); value(ML+90, y+4, v2, 75);
+      y += 12;
+    }); y += 4;
+
+    // El Bien
+    y = sectionTitle(ML, y, 'EL BIEN') + 2;
+    const bien_desc = v.marca ? v.marca + ' ' + v.modelo + (v.anio ? ' ' + v.anio : '') : (contrato.auto_descripcion || '—');
+    label(ML, y, 'DESCRIPCIÓN'); value(ML, y+4, bien_desc, 75);
+    label(ML+90, y, 'PRECIO DEL BIEN (con IVA)'); value(ML+90, y+4, fmt(contrato.precio_bien), 75);
+    y += 12;
+    label(ML, y, 'DESTINO DE USO'); value(ML, y+4, 'Particular', 75);
+    label(ML+90, y, 'ASEGURADORA'); value(ML+90, y+4, 'A confirmar — Todo riesgo con franquicia', 75);
+    y += 14;
+
+    // Condiciones financieras
+    y = sectionTitle(ML, y, 'CONDICIONES FINANCIERAS') + 2;
+    const finRows = [
+      ['MONEDA', mon === 'ARS' ? 'Pesos Argentinos' : 'Dólares Estadounidenses', 'PLAZO', (contrato.plazo_meses||'—') + ' meses'],
+      ['TASA NOMINAL ANUAL', contrato.tasa_anual ? (contrato.tasa_anual*100).toFixed(2) + '%' : '—', 'FECHA DE INICIO', fmtFecha(contrato.fecha_inicio)],
+      ['CANON MENSUAL (sin IVA)', fmt(contrato.canon_mensual), 'OPCIÓN DE COMPRA', fmt(contrato.opcion_compra)],
+      ['GARANTÍA / DEPÓSITO', fmt(contrato.garantia), 'IVA APLICABLE', '21% sobre el canon total'],
+    ];
+    finRows.forEach(([l1,v1,l2,v2]) => {
+      label(ML, y, l1); value(ML, y+4, v1, 75);
+      label(ML+90, y, l2); value(ML+90, y+4, v2, 75);
+      y += 12;
+    });
+
+    // ── PAGE 2: CONDICIONES GENERALES ────────────────────────────────
+    pageNum++; addPage(pageNum); y = MT + 4;
+    y = sectionTitle(ML, y, 'CONDICIONES GENERALES') + 4;
+
+    const clausulas = [
+      ['', 'Entre PHENIX LEASING S. A., con domicilio en Carlos Pellegrini 1163 piso 10° de la Ciudad Autónoma de Buenos Aires, en adelante "el Dador”, representada en este acto por Daniel Mario Cardoni. en carácter de Apoderado, y GRUPO MOLIERE S.A., con domicilio en Chile 299 de la Ciudad Autónoma de Buenos Aires, representada en este acto por el Sr. Carlos Alberto Granero en carácter de Apoderado, en adelante “el Tomador” convienen en celebrar el presente Contrato de Leasing, sujeto a las siguientes cláusulas y condiciones.'],
+      ['Objeto', 'El Dador cede en Leasing, el o los Bienes que se encuentran detallados en el Anexo I, en adelante "los Bienes". El uso al que se destinarán los Bienes será el allí mencionado y serán adquiridos por el Dador al Proveedor que ha sido indicado y elegido por el Tomador y cuyos datos están en el Anexo l o que se proporcionaran en la factura proforma presentada por el TOMADOR. Las partes acuerdan que el Proveedor entregará los Bienes al Tomador en el Lugar de Entrega indicado en el mismo Anexo.'],
+      ['Plazo', 'La Fecha de Inicio del Leasing será la fecha de entrega de los Bienes al Tomador. El plazo del Leasing será la cantidad de meses enteros establecida en el Anexo II si la Fecha de Inicio es el primero de un mes. En caso contrario, se adicionarán a dicho plazo los días que medien entre la Fecha de Inicio y el primer día del mes siguiente.'],
+      ['Canon Proporcional', 'En caso que la Fecha de Inicio no sea el primero de un mes y por lo tanto deban adicionarse días al plazo originalmente previsto, el Tomador abonará además de los cánones detallados en el Anexo II, un “canon proporcional adicional”, que será igual al canon mensual promedio indicado en el Anexo II multiplicado por la diferencia de días que medien entre la Fecha de Inicio y el primer día del mes siguiente y dividido por 30, que será pagadero el primero del mes siguiente a la Fecha de Inicio. Al importe resultante deberá adicionársele el IVA vigente a su vencimiento. Los demás cánones vencerán el Período (mes, trimestre, semestre) siguiente, según se indica en el Anexo II.'],
+      ['Valor del Contrato, Cánones fijos', ['La moneda de pago de este contrato será la indicada en el Anexo I. El Tomador deberá pagar, por el uso y goce de los Bienes, los cánones indicados en el Anexo II y tendrá la opción de comprar los Bienes al precio indicado en dicho anexo como Opción de Compra. A dichos importes se les deberá agregar, en cada caso, el IVA vigente al momento de su vencimiento.', 'Los importes del “Canon Fijo”, de  de Compra” y de  de Valores X” que están detallados en el Anexo II que tiene como subtítulo Valores Presupuestados, fueron establecidos bajo el supuesto de que el Valor del Contrato, es decir, el precio de los Bienes más todos los gastos necesarios para su entrega, netos de IVA, fuera igual al importe indicado en dicho anexo. Este Valor del Contrato ha sido presupuestado sobre la base de las informaciones dadas por el Tomador, el Proveedor y los agentes que intervienen eventualmente en su importación si existiera, en su ensamblaje, montaje y puesta en funcionamiento. Para el caso de Bienes adquiridos con desembolsos previos al inicio del Leasing, el Valor del Contrato también incluye cargos financieros resultantes de aplicar a los desembolsos previos a la Fecha de Inicio del Leasing  de interés indicada en el Anexo I, desde la fecha de cada desembolso hasta la Fecha de Inicio prevista para el Leasing. Si por cualquier causa ajena al Dador, por ejemplo, mayores costos en la compra de los Bienes, diferencias de tipo de cambio, mayor plazo para su entrega, etc., el Valor del Contrato real resultase un importe diferente al indicado en el Anexo II con valores presupuestados, el Dador incrementará o disminuirá proporcionalmente, según sea el caso, los valores del Canon Fijo, de la Opción de Compra y de  de Valores X de dicho anexo, informando al Tomador tal circunstancia. A tal efecto, entregará al Tomador una segunda versión del Anexo II, que tendrá un formato similar a la primera pero esta vez con el subtítulo Valores Finales.', 'Este Anexo II con “Valores Finales”, que reemplazará eventualmente al Anexo II con “Valores Presupuestados” a todos sus efectos, contendrá los importes finales de cada Canon Fijo, del Canon Proporcional si existiera, y de la Opción de Compra que serán recalculados en función de la relación que exista entre el Valor del Contrato real y el presupuestado. En caso que el Tomador lo requiera, el Dador pondrá a su disposición copia de los comprobantes que acrediten los mayores costos incurridos.', 'Dado que los Cánones y la Opción de Compra se estructurarán de modo que siempre venzan un día primero de mes, sus vencimientos finales serán definidos de modo tal que:', 'Si la Fecha de Inicio real es un día primero de mes, la diferencia en meses enteros de cada vencimiento final respecto de la Fecha de Inicio real será igual a la diferencia en meses enteros establecida en la primera versión del Anexo II para cada vencimiento respecto de la Fecha de Inicio presupuestada.', 'Si la Fecha de Inicio real es un día que no es primero de mes, la diferencia en meses enteros de cada vencimiento final respecto del primer día del mes siguiente al de la Fecha de Inicio real será igual a la diferencia en meses enteros establecida en la primera versión del Anexo II para cada vencimiento respecto de la Fecha de Inicio presupuestada.', 'Una vez que el Tomador haya recibido el Anexo II con Valores Finales, la falta de objeciones del Tomador en los siguientes 30 días implicará su aceptación por éste. Luego que el Tomador lo haya aceptado en forma expresa o en forma tácita por haber transcurrido el lapso mencionado, el Tomador quedará obligado  pagos allí establecidos en las fechas allí establecidas. En cualquier caso, incluso cuando el Tomador haya presentado objeciones al Anexo II con Valores Finales, deberá efectuar dichos pagos, no podrá interrumpirlos ni modificar sus importes o fechas hasta que las partes hayan acordado la resolución de dicha objeción. En general, cuando se menciona en este contrato el Anexo II, debe entenderse que se trata de dicho anexo en su primera versión hasta la Fecha de Inicio, y en su segunda versión con Valores Finales después de dicha fecha, si fuese cambiado; caso contrario continúa vigente el anterior.']],
+      ['Cánones Variables', 'En el Anexo I se especificará si el contrato es de Canon Fijo o Canon Variable. En el caso de ser Variable, junto con cada uno de los Cánones Fijos indicados en el Anexo II que venzan en una fecha posterior a la Fecha de Inicio del Leasing y junto con el vencimiento de la Opción de Compra, se determinará un Canon Variable adicional que se debitará o acreditará en favor del Tomador, según sea positivo o negativo, y será calculado según el procedimiento que se indica a continuación:'],
+      ['Definiciones:', ['Tasa Base = El nivel de la tasa BADLAR, publicada por el BCRA, para depósitos a plazo fijo de más de un millón de pesos de  35 días de plazo correspondiente a Bancos Privados, que se tomó en cuenta al cotizar este contrato, que está indicada en el Anexo II como Tasa BADLAR Base.', 'Tasa del Período = El promedio aritmético de dicha tasa BADLAR vigente desde el séptimo día hábil anterior al día que comienza cada Período (mes, trimestre, semestre, etc.) del Leasing hasta el tercer día hábil anterior, ambos inclusive.', 'Valor X = El Valor que para el cálculo de cada vencimiento está indicado en el Anexo II.', 'El Canon Variable que deberá debitarse o acreditarse, según sea positivo o negativo, al final de cada Período del Leasing, será el resultado de multiplicar el Valor X indicado para esa fecha por la diferencia entre la Tasa del Período correspondiente y la Tasa Base, multiplicada por el número de días que median entre el día que comienza ese período del Leasing y el día en que termina dicho período y dividida por 36500.', 'Al importe así obtenido deberá aplicársele el IVA vigente en el momento de su vencimiento. Si  dejara de ser publicada, se tomará un indicador que exista en ese momento que refleje razonablemente el costo promedio que tienen los Bancos en Argentina para captar deuda del público al plazo más utilizado en ese momento.', 'El Tomador deberá abonar adicionalmente:', 'al momento de la celebración de este contrato una Comisión de Estructuración por el valor indicado en el Anexo I, al cual deberá adicionarse el IVA vigente', 'Las primas de los seguros previstos en la cláusula 12 del presente,', 'Los impuestos, tasas o contribuciones que graven los Bienes, al vencimiento correspondiente', 'Todos los impuestos y tasas actuales y futuros que graven el Leasing excepto el impuesto sobre los ingresos brutos y sobre los débitos y créditos bancarios del Dador', 'Los gastos de Gestoría, inscripción de Leasing, certificaciones, etc. necesarias para formalización de la operación', 'Cualquier otro cargo que el Dador tuviese que abonar sobre los Bienes.']],
+      ['Depósito en Garantía, Intereses Punitorios', ['El Tomador, a la firma del Contrato, entrega al Dador el importe indicado en el Anexo I, en concepto de “Garantía del fiel y cabal cumplimiento del Contrato”. Este importe recibido a "título de depósito" está destinado a garantizar las obligaciones de hacer del Tomador y por tanto: (a) si la operación de Leasing no se puede llevar a cabo por causas no imputables al Dador, el Dador queda irrevocablemente autorizado a aplicar el importe del depósito como indemnización por la cancelación de la operación, (b) si la operación no se llevara a cabo por causas imputables al Dador, el importe del depósito deberá ser reembolsado al Tomador o (c) si la operación se llevara a cabo será mantenido por el Dador como garantía de las obligaciones del Tomador y será restituido en la fecha vencimiento del plazo de este contrato sin actualización alguna, siempre y cuando no existan montos impagos a cargo del Tomador.', 'El Tomador acepta pagar intereses punitorios al triple de  vigente para el período en que vence la obligación impaga por cualquier monto no pagado a su vencimiento, calculados desde la fecha del incumplimiento hasta el efectivo pago del monto adeudado.']],
+      ['Domicilio de pago de los cánones', 'Pagaderos en el domicilio del Dador consignado en el encabezamiento, o donde éste lo determine en la factura de pago.'],
+      ['Opción de Compra', ['El Tomador tendrá derecho en la fecha indicada en el Anexo II a ejercer una “Opción de Compra” por los Bienes por el precio establecido en dicho anexo. En el supuesto de ejercer el derecho de Opción de Compra, el Tomador deberá pagar dicho importe más el IVA vigente al momento de su vencimiento, más los impuestos y gastos que origine la transferencia de los Bienes a su nombre o al de terceros que este indique.', 'En el supuesto de no ejercer el derecho de “Opción de Compra”, el Tomador deberá optar entre devolver en forma inmediata los Bienes al Dador o renovar el Leasing por uno o más períodos. Si optara por renovar el Leasing, se mantendrán vigentes todas las condiciones del contrato, inclusive el valor del canon periódico (mensual, trimestral, semestral, etc.) y de  de Compra. El Tomador podrá comunicar por medio fehaciente al Dador su decisión optando por alguna de las tres alternativas mencionadas 30 días antes del vencimiento de  de Compra. Ante el silencio del Tomador se presumirá que ha optado por renovar el Leasing por un mes más. En tal situación, el Dador podrá optar por aceptar la renovación por ese mes o, en cualquier momento, notificar al Tomador que debe optar por ejercer  de Compra pagando su precio o devolver los Bienes en forma inmediata.', 'Una vez ejercida la Opción de Compra por parte del Tomador, éste podrá ceder los derechos emergentes de la misma a un tercero, para lo cual deberá notificarlo en forma fehaciente al Dador. La recepción por parte del Dador de la notificación de cesión implicará su obligación de transferir los Bienes al tercero designado en la notificación siempre y cuando el Dador o el Tercero hayan dado cumplimiento con las obligaciones detalladas en el primer párrafo de la cláusula 8.']],
+      ['Obligaciones y derechos del Tomador', ['Los Bienes le serán entregados al Tomador directamente por el Proveedor en el Lugar de Entrega indicado en el Anexo I, quedando a cargo del Tomador el pago de todos los costos en que se incurra a los fines de dicha entrega. Una vez recibidos los Bienes, el remito del Proveedor o del transporte firmado por el Tomador, o en su defecto un acta de recepción firmada por el Tomador, definirá la fecha de entrega. Los bienes se entenderán aceptados incondicionalmente por el Tomador. A partir de la fecha de entrega se dará comienzo al Leasing.', 'Si el Tomador se negare  Bienes, o si la entrega de los Bienes no pudiere realizarse por cualquier causa ajena al Dador hasta 90 días después de la Fecha de Inicio presupuestada en el Anexo II, o si se produjera un cambio desfavorable sustancial en los indicadores tomados en cuenta por el Dador para analizar la calidad crediticia y capacidad de pago del Tomador, el Dador tendrá derecho, a su opción a aplicar cualquiera de los párrafos siguientes:', 'Exigir mediante notificación fehaciente el cumplimiento de este Contrato en el término de 5 días corridos con más los daños y perjuicios que pudiera generar la demora del Tomador; si en ese plazo el Tomador no cumpliere, el Contrato se considerará resuelto sin más y el Dador podrá exigir los importes previstos en el párrafo siguiente;', 'Resolver este Contrato de pleno derecho y exigir al Tomador, mediante notificación fehaciente, que en el plazo de 5 días corridos, reintegre íntegramente el precio pagado por el Dador al Proveedor, con más gastos, impuestos, costos e intereses a  para Desembolsos previos a  indicada en el Anexo I. Adicionalmente, el Dador retendrá para sí el Depósito de la cláusula 6 como compensación por la frustración del Contrato. Una vez pagadas todas las sumas indicadas en el plazo mencionado, el Dador transferirá los derechos que tiene sobre los Bienes al Tomador.', 'En caso que el Tomador no abonare las sumas indicadas en el párrafo 0 precedente en los términos allí previstos, el Dador podrá iniciar las acciones judiciales para exigir el pago de dichas sumas con más los gastos que correspondan. Ello sin perjuicio del derecho del Dador, en carácter de propietario de los Bienes, de disponer en forma inmediata de ellos.', 'Sin perjuicio de lo previsto anteriormente, si el Tomador se negare  Bienes acreditando que ellos no cumplen con las especificaciones técnicas requeridas, o que tienen daños o faltantes, y que las circunstancias indicadas los hacen inútiles para su destino, entonces el Dador aplicará el párrafo 0 precedente, con la salvedad que, en este caso, restituirá al Tomador el Depósito en garantía de la cláusula 6.', 'El Tomador reconoce que recibe los Bienes en perfecto estado y se compromete a mantenerlos y devolverlos, en el caso de no ejercer  de Compra o de Renovación mencionada en la cláusula 7, en las mismas condiciones que los recibió, con excepción del desgaste que puedan surgir fruto del paso del tiempo y correcto uso.', 'El Tomador no está facultado para realizar en los Bienes ninguna modificación que altere el estado original de fábrica, como así tampoco cambiar el uso que corresponda, sin la previa autorización escrita del Dador.', 'El Tomador no podrá ceder gratuitamente o alquilar los Bienes, ni ceder total o parcialmente el presente Contrato o derechos de cualquier especie sobre éste, sin autorización escrita del Dador, como tampoco podrá dar en prenda o gravar de cualquier manera dichos Bienes en ningún caso.', 'Todos los gastos necesarios para el uso y mantenimiento de los Bienes y las reparaciones necesarias para su buen funcionamiento, son a cargo exclusivo del Tomador. Las piezas, equipos y accesorios que el Tomador incorpore a los Bienes durante la vigencia del Contrato deberán ser “originales del fabricante” exclusivamente, y pasan a ser, inmediatamente y con pleno derecho, propiedad del Dador, sin derecho a indemnización o compensación alguna. El Tomador deberá cumplir con todas las indicaciones del fabricante para mantener vigente la garantía.', 'El Tomador no puede solicitar una interrupción de los pagos, ni una reducción del precio del Leasing, ni una indemnización en caso de no poder utilizar los Bienes por causa de avería, robo, destrucción o de un hecho cualquiera ajeno al Dador', 'En caso que el Tomador no haya ejercido  de Compra y el Dador le haya indicado que no acepta continuar renovando el Leasing, o en caso de que se haya rescindido el contrato de Leasing por un incumplimiento material conforme la cláusula 14 subsiguiente, el Tomador quedará obligado a la devolución inmediata de los Bienes. En el supuesto de demora o negativa a la devolución de los Bienes, el Tomador, hasta tanto, quedará constituido automáticamente en “Depositario”, siendo pasible de las sanciones previstas en el artículo 173 inc. 2° del Código Penal, como así también de las previstas en el artículo 1358. En dicho supuesto renuncia a su vez al beneficio establecido por el artículo 1364 del Código Civil y Comercial de la Nación, siendo en todos los supuestos responsable de la pérdida del bien.', 'El Tomador deberá mantener los bienes', 'En el caso de que sean automotores o demás bienes señalados en º 24.673, radicados habitualmente en el garaje, hangar o galpón ubicado en el Domicilio de Radicación de los Bienes definido en el Anexo I, sin perjuicio de su desplazamiento regular y no permanente de acuerdo con su destino y la obligación de guardarlos en un garaje u otra construcción fija o movible adecuada para tal fin. El Tomador deberá solicitar autorización expresa al Dador para sacar los Bienes fuera del territorio de la República Argentina no obstante la entrega de la cédula verde a efectos de circular por el territorio de la República Argentina y países limítrofes. El incumplimiento de esta cláusula implicará un incumplimiento material del Contrato por parte del Tomador y autorizará al Dador a rescindir el contrato sin necesidad de interpelación alguna. La mora será automática y se configurará con la mera comprobación del traslado del automóvil fuera del país sin la debida autorización del Tomador.', 'En el caso de que no sean automotores o demás bienes señalados en la ley Nº 24.673, en el Domicilio de Radicación de los Bienes definido en las Condiciones Particulares de este Contrato, no pudiendo retirarlos sin consentimiento previo por escrito del Dador.', 'Deberá el Tomador asimismo informar cualquier cambio significativo en su situación patrimonial así como mantener actualizada la información comercial originalmente solicitada para la evaluación del crédito.']],
+      ['Obligaciones y derechos del Dador', ['El Dador se compromete a no interferir con el desarrollo de las actividades del Tomador.', 'Durante el término del Contrato, el Dador o su representante designado puede llevar a cabo o hacer llevar a cabo un control con el fin de verificar el buen uso o el buen mantenimiento de los Bienes por parte del Tomador. El Tomador deberá proporcionar al Dador o su representante toda clase de facilidades a tales efectos.']],
+      ['Propiedad de los Bienes', ['Los Bienes son de propiedad exclusiva del Dador. El Tomador debe respetar en todo momento este derecho de propiedad.', 'Si los Bienes son dañados, destruidos, robados o recuperados o si, por el contrario, son objeto de un incendio o accidente de cualquier tipo que pueda provocar un litigio real o potencial, entre el Tomador y el Dador, o entre el Tomador o el Dador y un tercero, el Tomador deberá informar por escrito, en forma fehaciente y dentro de las 48 horas al Dador sobre dicha circunstancia. El incumplimiento de esta obligación será considerado "material" a los efectos de la rescisión del presente contrato.']],
+      ['Inscripción de los Bienes', 'El Contrato será inscripto por el Dador en el Registro que corresponda y los gastos serán a cargo del Tomador.'],
+      ['Seguros', ['Ambas partes acuerdan que durante todo el plazo del Contrato los Bienes serán asegurados por el Dador o el Tomador, según se indica en el Anexo I. En caso de que el Tomador sea una persona física, el Dador contratará un seguro de vida según se indica en el Anexo I. En ambos casos, los costos de contratación, primas y gastos serán a cargo del Tomador. El Beneficiario de las pólizas de seguros será el Dador. La compañía de seguros designada inicialmente por ambas partes es la que figura en el Anexo I. El seguro cubrirá los riesgos detallados en las Anexo I. El valor de las sumas aseguradas mediante los seguros contratados será equivalente al valor comercial de reposición de los Bienes y el Valor del Contrato para el seguro de vida.', 'El Tomador asume todos los riesgos no cubiertos por el seguro, incluso asume el riesgo de que la compañía de seguros designada no cumpla adecuadamente sus obligaciones.', 'El Dador o, en su caso el Tomador, podrá cambiar la compañía de seguros, informando al Tomador o al Dador, según corresponda, el nombre de la nueva compañía designada dentro de los 10 días antes de implementarse el cambio de aseguradora. El Tomador o, en su caso el Dador, podrá rechazar la nueva compañía cuando ello se encuentre debidamente justificado. Si el Tomador, o el Dador, según corresponda, no expresara su disconformidad con la nueva compañía designada antes de la implementación del cambio, se entiende que lo acepta sin reservas. Si por el contrario, en su caso, rechaza la nueva compañía designada por el Dador o el Tomador, según corresponda, las Partes designarán de común acuerdo la nueva compañía de seguros. Durante el plazo que transcurra hasta la celebración del contrato de seguro con la nueva aseguradora el Tomador deberá mantener la vigencia de la anterior póliza de seguro con la compañía hasta ese entonces vigente. En caso de que no lleguen a un acuerdo, el Tomador deberá elegir entre tres compañías propuestas por el Dador.', 'El Tomador deberá cumplir con todas las condiciones estipuladas en cada póliza de seguro y mantener al día el pago de las primas correspondientes a cada uno de los seguros contratados. El Dador pagará por cuenta del Tomador o, si el seguro lo tomara el Tomador, el Dador podrá pagar las primas correspondientes, pudiendo reembolsarse los pagos que haya realizado del Tomador. Si el Tomador reembolsara tardíamente dichas sumas al Dador, éste podrá reclamar asimismo los intereses punitorios según lo establecido en la cláusula 6 de este Contrato, mediante un simple requerimiento escrito al Tomador.', 'En caso de siniestro, el Tomador deberá informar inmediatamente al Dador y cumplir con la obligación de informar en debido tiempo y forma al asegurador.', 'En caso de destrucción o pérdida total de los Bienes, incluido pero no limitado al robo, hurto, incendio, expropiación y decomiso, aun cuando dichos hechos hayan sido producidos por caso fortuito o fuerza mayor, la indemnización emergente del seguro será abonada por el Asegurador directamente al Dador. En esa circunstancia el Dador aplicará el importe cobrado a una de las dos siguientes alternativas que le haya indicado por escrito el Tomador.', 'Al pago correspondiente al ejercicio anticipado de la opción de compra de conformidad con lo establecido en la cláusula 15 de este Contrato.', 'A la adquisición de bienes a efectos de reemplazar los Bienes siniestrados en igual cantidad y calidad a estos últimos, ello en tanto el importe de la indemnización alcance a cubrir íntegramente el costo de adquisición de los bienes que eventualmente reemplazarían los siniestrados o, si hubiere un faltante, en tanto éste fuera cubierto por el Tomador. Producida la adquisición de los Bienes en Reemplazo de los siniestrados, éstos ocuparán el mismo lugar que los Bienes Originales siendo aplicables a aquéllos todos los términos y condiciones de este Contrato. Queda especialmente establecido que los gastos, tasas, y honorarios que la gestión de registración de la sustitución de los Bienes originales por los Bienes en Reemplazo pueda demandar, así como todo otro gasto derivado de la sustitución de los Bienes, serán a exclusivo cargo del Tomador, quien se compromete a reembolsarlos al Dador a su solo requerimiento, y se compromete a suscribir toda la documentación que demande la realización del precitado trámite registral.', 'El Tomador deberá continuar pagando los Cánones a su respectivo vencimiento durante todo el plazo en el cual el importe correspondiente a la indemnización no sea percibido por el Dador.', 'Si la suma percibida por el Dador como indemnización del seguro cubriera exactamente el importe de la cláusula 15 más todos los demás pagos a cargo del Tomador conforme este Contrato, éste último quedará liberado de sus obligaciones de pago.', 'Si dicha suma percibida por el Dador no alcanzara  importes indicados en el párrafo anterior, o si la pérdida de los Bienes no fuera cubierta por la Compañía de Seguros, entonces el Tomador deberá integrar el saldo dentro de los cinco (5) días de notificado fehacientemente a tal fin por el Dador.', 'Si la suma cobrada como indemnización del seguro excediera los importes indicados en el párrafo anterior, el excedente quedará en beneficio del Tomador.', 'En caso de pérdida parcial de los Bienes, el Tomador deberá proceder a su reparación a total satisfacción del Dador, quien le entregará la suma recibida del Asegurador, siempre y cuando hubiere verificado previamente la reparación de los Bienes en debida forma. En caso que el asegurador no abonare indemnización alguna o que las sumas pagadas no alcanzaran  gastos de reparación, éstos o el faltante quedarán totalmente a cargo del Tomador. En caso de pérdida parcial el Tomador deberá continuar pagando el Canon en la forma y tiempo establecido, sin derecho a reducción o reconsideración alguna respecto de los importes establecidos en este Contrato.']],
+      ['Responsabilidad. Gastos legales', ['Responsabilidad. El Dador, de conformidad con lo dispuesto en el artículo 1243 del Código Civil y Comercial de la Nación, no será responsable por la entrega de los Bienes, por demoras ajenas a su conducta, ni de las garantías de evicción y vicios redhibitorios. De la misma forma el Dador se encuentra eximido de la responsabilidad objetiva que surge del artículo 1.757 del Código Civil y Comercial de la Nación. Las partes acuerdan que el Tomador asume dichas responsabilidades.', 'Gastos legales. El Tomador asumirá todos los gastos legales propios y del Dador, y mantendrá indemne al Dador en caso de producirse un reclamo judicial o extrajudicial por hechos originados por culpa del Tomador, por daños causados por los Bienes, o por hechos por los cuales, bajo la ley vigente y el Contrato, el Tomador deba responder.']],
+      ['Rescisión', ['Rescisión por incumplimiento material. El incumplimiento de cualquiera de las obligaciones aquí asumidas por el Tomador, tales como pero sin limitarse  falta de pago del canon o del seguro, o la caducidad de vigencia de la cobertura de seguro por falta de pago de las primas por el Tomador o la falta de colocación y/o desconexión del sistema de rastreo satelital o por alguna otra causa imputable al Tomador, será considerado "material". Asimismo se considerá incumplimiento “material” la falta de pago de dos o más cánones consecutivos por pte del Tomador en cualquier otro contrato de Leasing celebrado entre el Dador y el Tomador.  Estas circunstancias dán derecho al Dador a rescindir el Contrato por exclusiva culpa del Tomador, exigiendo la entrega inmediata de los Bienes, con más el cobro del canon que se hubiere devengado ordinariamente hasta que el Dador obtenga la restitución o secuestro de los Bienes, más una multa del 30% del Valor del Contrato por el incumplimiento, todo ello con sus intereses y los daños y perjuicios correspondientes. En caso de rescisión por culpa del Tomador, el Dador tendrá la opción de exigir el pago del valor definido en la cláusula 15 para  de Compra Anticipada", quedando facultado a proceder de conformidad con lo establecido en el artículo 1249 del Código Civil y Comercial de la Nación.', 'Rescisión anticipada de común acuerdo por las Ptes.  La rescisión del Contrato podrá ser efectuada de común acuerdo por las Ptes ya sea mediante acuerdo escrito celebrado a tales efectos o bien mediante la entrega o devolución, por pte del Tomador al Dador, del Bien o los Bienes dados en Leasing enumerados en el Anexo 1.  La rescisión anticipada del Contrato, de común acuerdo por las Ptes, también dá derecho al Dador de exigir el pago del valor definido en la cláusula 15 pa  de Compra Anticipada", quedando facultado a proceder de conformidad con lo establecido en el artículo 1249 del Código Civil y Comercial de la Nación. En el supuesto de entrega o devolución anticipada del Bien o los Bienes dados Leasing, el valor del o los bienes será del 50% (cincuenta por ciento) del valor de realización, calculado de acuerdo al precio de reventa.']],
+      ['Opción de Compra Anticipada', 'Sin perjuicio de lo dispuesto anteriormente, las partes, de acuerdo, convienen que el Tomador, podrá optar por comprar los Bienes en cualquier momento antes de la fecha de vencimiento del Plazo Aplicable. En ese caso, el precio de compra a ser pagado por el Tomador será igual a la suma de ( Cánones y demás sumas que se encuentren vencidos e impagos a la Fecha de Pago de la Opción de Compra Anticipada, (b) el valor presente (descontado a  del 12%) de todos los Cánones a vencer y de la Opción de compra establecidos en el Anexo II, con más el IVA vigente en su momento. Asimismo, el Tomador deberá hacerse cargo del pago de todos los impuestos y otros costos vinculados con dicho ejercicio anticipado. A estos efectos el Tomador deberá enviar una notificación fehaciente al Dador con una anticipación de por lo menos 30 días manifestando su decisión.'],
+      ['Jurisdicción', 'Las diferencias y controversias que pudieren surgir en la interpretación y ejecución del Contrato se someterán a la jurisdicción de los tribunales ordinarios de , renunciando a cualquier otro fuero o jurisdicción, inclusive la federal.'],
+      ['Derecho Aplicable', 'El Contrato y los derechos y obligaciones de las partes emergentes del mismo se regirán por las leyes de la República Argentina.'],
+      ['Varios', ['Los Anexos I y II, en su versión inicial con Valores Presupuestados y en su versión final con Valores Finales, son considerados como parte integrante de este Contrato.', 'Las Partes constituyen domicilios en los indicados en el encabezamiento y en el Anexo I. Los domicilios sólo pueden ser modificados previa notificación por escrito a la otra parte.', 'Todas las comunicaciones o notificaciones que realicen las partes vinculadas con el Contrato serán consideradas válidas si son realizadas por escrito y en los domicilios indicados.', 'Si a partir de celebrado este contrato, las condiciones económicas variaran sustancialmente con incidencia en el presente contrato, el Dador podrá proponer un nuevo canon que compense dichos cambios y el Tomador deberá aceptarlo salvo que pueda demostrar error manifiesto en el cálculo realizado por el Dador.', 'La nulidad de una cláusula del Contrato no implicará la nulidad del resto del Contrato y las partes harán sus mejores esfuerzos para sustituir la cláusula nula por otra válida de similar contenido económico.', 'El Contrato sólo puede ser modificado por medio de acuerdo escrito firmado por las partes.', 'El Contrato prevalece sobre otro acuerdo verbal o escrito de celebrado entre partes relacionado con el objeto del Contrato.', 'Los epígrafes usados en el Contrato son sólo para fines de identificación y no deben ser tenidos en cuenta para la interpretación de los derechos y obligaciones que nacen del mismo.', 'El Dador tendrá el derecho de ceder, prendar o de otro modo disponer en forma total o parcial cualquiera de sus derechos conforme al presente Contrato, sin necesidad previa de notificación al Tomador.', 'El Dador queda facultado para solicitar en forma individual sin la intervención del Tomador la cancelación del contrato cuando correspondiere ante el registro pertinente y a suscribir toda la documentación respectiva con gastos a cargo del Tomador.']],
+      ['Impuesto a los sellos', 'Las partes establecen, que por la presente operación corresponde el pago del Impuesto de Sellos y manifiestan que será abonado en tiempo y forma; desobligando y eximiendo al Escribano de cualquier responsabilidad o contingencia derivada de dicho impuesto.'],
+    ];
+
+    const a1rows = [
+      ['Dador', 'Phenix Leasing S.A. — CUIT 30-70883564-8'],
+      ['Domicilio del Dador', 'Carlos Pellegrini 1163 piso 10°, CABA, CP 1009'],
+      ['Representante del Dador', 'Daniel Mario Cardoni — DNI 7.672.689'],
+      ['Tomador', (u.nombre||u.email||'—') + (u.cuit ? ' — CUIT ' + u.cuit : '')],
+      ['Domicilio del Tomador', '—'],
+      ['Representante del Tomador', u.nombre||'—'],
+      ['Bienes', bien_desc + (v.vin ? ' — VIN: ' + v.vin : '') + (v.patente ? ' — Patente: ' + v.patente : '')],
+      ['Precio del Bien (con IVA)', fmt(contrato.precio_bien)],
+      ['Moneda de pago', mon === 'ARS' ? 'Pesos Argentinos' : 'Dólares Estadounidenses'],
+      ['Tasa Nominal Anual', contrato.tasa_anual ? (contrato.tasa_anual*100).toFixed(2) + '%' : '—'],
+      ['Tipo de canon', 'Fijo'],
+      ['Valor del Contrato', fmt(contrato.valor_contrato || contrato.canon_mensual * contrato.plazo_meses)],
+      ['Garantía', fmt(contrato.garantia)],
+      ['Domicilio de Radicación de los Bienes', 'Capital Federal'],
+      ['Contratante del Seguro', 'El Dador'],
+      ['Compañía de Seguros', 'A confirmar'],
+      ['Riesgos cubiertos', 'Todo riesgo con franquicia'],
+      ['Destino del bien', 'Particular'],
+      ['Lugar y fecha del contrato', 'CABA, ' + fechaFirma],
+    ];
+
+    a1rows.forEach(([l, v2]) => {
+      doc.setDrawColor(235,235,232); doc.setLineWidth(0.2);
+      doc.line(ML, y + 5, W - MR, y + 5);
+      doc.setFontSize(7); doc.setFont('helvetica','bold'); doc.setTextColor(150,150,150);
+      doc.text(l.toUpperCase(), ML, y);
+      doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(10,10,10);
+      const vlines = doc.splitTextToSize(String(v2), W - ML - MR - 2);
+      doc.text(vlines, ML, y + 4);
+      y += vlines.length * 3.8 + 4;
+      if (y > H - 25) { pageNum++; addPage(pageNum); y = MT + 8; }
+    });
+
+    // ── ANEXO II ──────────────────────────────────────────────────────
+    pageNum++; addPage(pageNum); y = MT + 4;
+    y = sectionTitle(ML, y, 'ANEXO II — CUADRO DE CÁNONES') + 4;
+
+    // Table header
+    const cW = [10, 27, 55, 27, 24, 27];
+    const cX = [ML];
+    cW.forEach((w, i) => { if (i > 0) cX.push(cX[i-1] + cW[i-1]); });
+    const headers3 = ['N°', 'Vencimiento', 'Concepto', mon + ' (sin IVA)', 'IVA (21%)', 'Total'];
+
+    // Helper: justify text at position
+    const justifyText = (text, x, y, maxW) => {
+      const lines = doc.splitTextToSize(text, maxW);
+      lines.forEach((line, li) => {
+        const isLast = li === lines.length - 1;
+        if (isLast || lines.length === 1) {
+          doc.text(line, x, y + li * 4.0);
+        } else {
+          const words = line.trim().split(' ').filter(w => w);
+          if (words.length <= 1) {
+            doc.text(line, x, y + li * 4.0);
+          } else {
+            const lineW = doc.getTextWidth(words.join(' '));
+            const space = (maxW - lineW) / (words.length - 1);
+            let xPos = x;
+            words.forEach(word => {
+              doc.text(word, xPos, y + li * 4.0);
+              xPos += doc.getTextWidth(word) + doc.getTextWidth(' ') + space;
+            });
+          }
+        }
+      });
+      return lines.length;
+    };
+
+    const drawTableHeader = () => {
+      doc.setFillColor(10,10,10);
+      doc.rect(ML, y, W - ML - MR, 8, 'F');
+      doc.setFontSize(7.5); doc.setFont('helvetica','bold'); doc.setTextColor(255,255,255);
+      headers3.forEach((h, i) => {
+        doc.text(h, cX[i] + cW[i]/2, y + 5.5, { align:'center', maxWidth: cW[i]-2 });
+      });
+      return y + 8;
+    };
+
+    y = drawTableHeader();
+    let totalCanon = 0, totalIva = 0, totalTotal = 0;
+
+    (cuotas || []).forEach((c, idx) => {
+      if (y > H - 25) { pageNum++; addPage(pageNum); y = MT + 4; y = drawTableHeader(); }
+      const canon = parseFloat(c.monto || 0);
+      const iva2 = parseFloat(c.iva || canon * 0.21);
+      const total2 = canon + iva2;
+      totalCanon += canon; totalIva += iva2; totalTotal += total2;
+      const rowBg = idx % 2 === 0 ? [245,245,243] : [255,255,255];
+      doc.setFillColor(...rowBg);
+      doc.rect(ML, y, W - ML - MR, 7, 'F');
+      doc.setDrawColor(224,224,220); doc.setLineWidth(0.2);
+      doc.line(ML, y + 7, W - ML - MR + ML, y + 7);
+      doc.setFontSize(7.5); doc.setFont('helvetica','normal'); doc.setTextColor(51,51,51);
+      const rowVals = [String(c.numero).padStart(2,'0'), c.fecha_vencimiento ? new Date(c.fecha_vencimiento).toLocaleDateString('es-AR') : '—', 'Canon N° ' + c.numero + ' fijo', canon.toLocaleString('es-AR',{minimumFractionDigits:2}), iva2.toLocaleString('es-AR',{minimumFractionDigits:2}), total2.toLocaleString('es-AR',{minimumFractionDigits:2})];
+      rowVals.forEach((val, i) => {
+        const align2 = i === 2 ? 'left' : 'center';
+        const xPos = i === 2 ? cX[i] + 1 : cX[i] + cW[i]/2;
+        doc.text(String(val), xPos, y + 4.8, { align: align2, maxWidth: cW[i]-2 });
+      });
+      y += 7;
+    });
+
+    // Opcion de compra
+    if (contrato.opcion_compra) {
+      if (y > H - 25) { pageNum++; addPage(pageNum); y = MT + 4; y = drawTableHeader(); }
+      const oc = parseFloat(contrato.opcion_compra); const ocIva = oc * 0.21;
+      doc.setFillColor(250,250,248);
+      doc.rect(ML, y, W - ML - MR, 7, 'F');
+      doc.setFontSize(7.5); doc.setFont('helvetica','normal'); doc.setTextColor(51,51,51);
+      const lastFecha = cuotas && cuotas.length ? new Date(cuotas[cuotas.length-1].fecha_vencimiento).toLocaleDateString('es-AR') : '—';
+      [['—', lastFecha, 'Opción de compra', oc.toLocaleString('es-AR',{minimumFractionDigits:2}), ocIva.toLocaleString('es-AR',{minimumFractionDigits:2}), (oc+ocIva).toLocaleString('es-AR',{minimumFractionDigits:2})]].forEach(rowVals => {
+        rowVals.forEach((val, i) => {
+          const align2 = i === 2 ? 'left' : 'center';
+          const xPos = i === 2 ? cX[i] + 1 : cX[i] + cW[i]/2;
+          doc.text(String(val), xPos, y + 4.8, { align: align2, maxWidth: cW[i]-2 });
+        });
+      });
+      y += 7;
+    }
+
+    // Total row
+    if (y > H - 20) { pageNum++; addPage(pageNum); y = MT + 4; }
+    doc.setFillColor(240,90,40);
+    doc.rect(ML, y, W - ML - MR, 8, 'F');
+    doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(255,255,255);
+    doc.text('TOTAL', cX[2] + cW[2]/2, y + 5.5, { align:'center' });
+    doc.text(totalCanon.toLocaleString('es-AR',{minimumFractionDigits:2}), cX[3] + cW[3]/2, y + 5.5, { align:'center' });
+    doc.text(totalIva.toLocaleString('es-AR',{minimumFractionDigits:2}), cX[4] + cW[4]/2, y + 5.5, { align:'center' });
+    doc.text(totalTotal.toLocaleString('es-AR',{minimumFractionDigits:2}), cX[5] + cW[5]/2, y + 5.5, { align:'center' });
+    y += 14;
+
+    // ── FIRMAS ─────────────────────────────────────────────────────────
+    if (y > H - 60) { pageNum++; addPage(pageNum); y = MT + 4; }
+    y = sectionTitle(ML, y, 'FIRMAS') + 20;
+
+    // En la Ciudad Autónoma de Buenos Aires...
+    doc.setFontSize(8.5); doc.setFont('helvetica','normal'); doc.setTextColor(51,51,51);
+    const signIntro = 'En la Ciudad Autónoma de Buenos Aires en la fecha indicada en el Anexo I, se firman cuatro ejemplares de un mismo tenor y a un solo efecto.';
+    const signLines = doc.splitTextToSize(signIntro, W - ML - MR);
+    doc.text(signLines, ML, y); y += signLines.length * 4 + 14;
+
+    // Dador firma
+    doc.setDrawColor(51,51,51); doc.setLineWidth(0.5);
+    doc.line(ML, y, ML + 70, y);
+    doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(100,100,100);
+    doc.text('Apoderado', ML, y + 5);
+    doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.setTextColor(10,10,10);
+    doc.text('Daniel Mario Cardoni', ML, y + 11);
+    doc.setFontSize(8.5); doc.setFont('helvetica','normal'); doc.setTextColor(51,51,51);
+    doc.text('PHENIX LEASING S.A.', ML, y + 17);
+    doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(100,100,100);
+    doc.text('Dador', ML, y + 23);
+    y += 35;
+
+    // Tomador firma
+    doc.setDrawColor(51,51,51); doc.setLineWidth(0.5);
+    doc.line(ML, y, ML + 70, y);
+    doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(100,100,100);
+    doc.text('Apoderado', ML, y + 5);
+    doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.setTextColor(10,10,10);
+    doc.text(contrato.representante_tomador || u.nombre || '—', ML, y + 11);
+    doc.setFontSize(8.5); doc.setFont('helvetica','normal'); doc.setTextColor(51,51,51);
+    doc.text(u.nombre || '—', ML, y + 17);
+    doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(100,100,100);
+    doc.text('Tomador', ML, y + 23);
+
+    // Save
+    doc.save('Contrato_Phenix_' + nroContrato + '.pdf');
+    showToastPortal('✓ Contrato descargado');
+
+  } catch(e) {
+    showToastPortal('Error: ' + e.message);
+    console.error(e);
+  }
+}
+
+function showToastPortal(msg) {
+  const t = document.getElementById('toast');
+  if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ESCROW ON-CHAIN
+// ══════════════════════════════════════════════════════════════════
+const ESCROW_ABI_PORTAL = [
+  { inputs: [{ name: "leaseId", type: "uint256" }], name: "getLease", outputs: [{ components: [{ name: "lessor", type: "address" }, { name: "lessee", type: "address" }, { name: "arbitrator", type: "address" }, { name: "token", type: "address" }, { name: "depositAmount", type: "uint256" }, { name: "releasedAmount", type: "uint256" }, { name: "lockedAmount", type: "uint256" }, { name: "leaseDuration", type: "uint256" }, { name: "startTimestamp", type: "uint256" }, { name: "endTimestamp", type: "uint256" }, { name: "status", type: "uint8" }, { name: "carVIN", type: "string" }, { name: "carDescription", type: "string" }], type: "tuple" }], stateMutability: "view", type: "function" },
+  { inputs: [{ name: "leaseId", type: "uint256" }], name: "getConditions", outputs: [{ components: [{ name: "description", type: "string" }, { name: "basisPoints", type: "uint256" }, { name: "completed", type: "bool" }, { name: "releasedAmount", type: "uint256" }], type: "tuple[]" }], stateMutability: "view", type: "function" },
+];
+
+const TOKENS_PORTAL = {
+  '0x0000000000000000000000000000000000000000': { symbol: 'ETH', decimals: 18 },
+  '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913': { symbol: 'USDC', decimals: 6 },
+  '0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf': { symbol: 'cbBTC', decimals: 8 },
+};
+
+async function loadEscrowOnchain() {
+  const esc = window._escrowData;
+  if (!esc || !esc.contrato_address || !esc.lease_id) {
+    document.getElementById('escrow-onchain-section').style.display = 'none';
+    document.getElementById('escrow-no-onchain').style.display = 'block';
+    return;
+  }
+
+  document.getElementById('escrow-onchain-section').style.display = 'block';
+  document.getElementById('escrow-no-onchain').style.display = 'none';
+  document.getElementById('oc-basescan-link').href = explorerAddressPortal(esc.red, esc.contrato_address);
+  document.getElementById('oc-basescan-link-label').textContent = (esc.red === 'bsc') ? 'BscScan' : 'Basescan';
+
+  await refreshEscrowOnchain();
+}
+
+async function refreshEscrowOnchain() {
+  const esc = window._escrowData;
+  if (!esc || !esc.contrato_address) return;
+
+  try {
+    const netCfgOc = getRedConfigPortal(esc.red);
+    const provider = new ethers.JsonRpcProvider(netCfgOc.rpcUrl);
+    const contract = new ethers.Contract(esc.contrato_address, ESCROW_ABI_PORTAL, provider);
+    const [lease, conditions] = await Promise.all([
+      contract.getLease(esc.lease_id),
+      contract.getConditions(esc.lease_id)
+    ]);
+
+    const tokenInfo = netCfgOc.tokens[lease.token.toLowerCase()] || { symbol: 'TOKEN', decimals: 18 };
+    const total = parseFloat(ethers.formatUnits(lease.depositAmount, tokenInfo.decimals));
+    const liberado = parseFloat(ethers.formatUnits(lease.releasedAmount, tokenInfo.decimals));
+    const bloqueado = parseFloat(ethers.formatUnits(lease.lockedAmount, tokenInfo.decimals));
+    const pct = total > 0 ? Math.round((liberado / total) * 100) : 0;
+
+    document.getElementById('oc-total').textContent = total.toFixed(2) + ' ' + tokenInfo.symbol;
+    document.getElementById('oc-liberado').textContent = liberado.toFixed(2) + ' ' + tokenInfo.symbol;
+    document.getElementById('oc-bloqueado').textContent = bloqueado.toFixed(2) + ' ' + tokenInfo.symbol;
+    document.getElementById('oc-pct').textContent = pct + '%';
+    setTimeout(() => { document.getElementById('oc-progress').style.width = pct + '%'; }, 100);
+
+    // Render condiciones
+    const condsEl = document.getElementById('condiciones-list');
+    if (conditions && conditions.length) {
+      let html = '';
+      conditions.forEach((c, i) => {
+        const isDone = c.completed;
+        const monto = parseFloat(ethers.formatUnits(c.releasedAmount, tokenInfo.decimals));
+        html += '<div class="condicion-row' + (isDone ? ' done' : '') + '">';
+        html += '<span class="condicion-icon">' + (isDone ? '✅' : '⏳') + '</span>';
+        html += '<div class="condicion-info">';
+        html += '<div class="condicion-desc">' + c.description + '</div>';
+        html += '<div class="condicion-meta">' + (c.basisPoints / 100) + '% · índice #' + i + '</div>';
+        html += '</div>';
+        html += '<div class="condicion-monto ' + (isDone ? 'done' : 'pending') + '">' + (isDone ? monto.toFixed(4) + ' ' + tokenInfo.symbol : '—') + '</div>';
+        html += '</div>';
+      });
+      condsEl.innerHTML = html;
+    }
+
+    // Historial - link al explorer (Basescan o BscScan segun la red)
+    const histEl = document.getElementById('escrow-historial');
+    histEl.innerHTML = '<div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:14px">' +
+      '<div style="font-size:13px;color:var(--text2);margin-bottom:10px">Ver todas las transacciones del contrato en ' + (esc.red === 'bsc' ? 'BscScan' : 'Basescan') + ':</div>' +
+      '<a href="' + explorerAddressPortal(esc.red, esc.contrato_address) + '#internaltx" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:var(--blue-bg);color:var(--blue);border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;text-decoration:none">🔍 Ver transacciones en el explorer ↗</a>' +
+      '<div style="margin-top:10px;font-size:12px;color:var(--text3)">Lease ID on-chain: <span style="font-family:monospace;color:var(--text2)">#' + esc.lease_id + '</span></div>' +
+      '<div style="font-size:12px;color:var(--text3);margin-top:4px">Contrato: <span style="font-family:monospace;color:var(--blue)">' + esc.contrato_address.slice(0,10) + '...' + esc.contrato_address.slice(-6) + '</span></div>' +
+    '</div>';
+
+  } catch(e) {
+    document.getElementById('oc-total').textContent = 'Error';
+    console.error('Error loading onchain data:', e);
+  }
+}
+
+function loadInfoContrato() {
+  const d = window._contratoData;
+  if (!d || !d.contrato) return;
+  const c = d.contrato;
+  const container = document.getElementById('info-contrato-grid');
+  if (!container) return;
+
+  const fmt = n => n ? Number(n).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2}) : '—';
+  const fmtM = n => n ? (c.canon_moneda || 'USD') + ' ' + fmt(n) : '—';
+
+  container.innerHTML =
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">' +
+      infoCard('🚗 Vehículo', c.auto_descripcion || '—') +
+      infoCard('📋 Contrato', 'N° ' + (c.id || '').slice(0,8).toUpperCase()) +
+      infoCard('💰 Canon mensual', fmtM(c.canon_mensual)) +
+      infoCard('📅 Plazo', (c.plazo_meses || '—') + ' meses') +
+      infoCard('📆 Inicio', c.fecha_inicio ? formatDatePortal(c.fecha_inicio) : '—') +
+      infoCard('📆 Fin', c.fecha_fin ? formatDatePortal(c.fecha_fin) : '—') +
+      infoCard('🔑 Opción de compra', fmtM(c.opcion_compra)) +
+      infoCard('💳 Moneda', c.canon_moneda || 'USD') +
+      infoCard('📍 Estado', c.estado || '—') +
+      infoCard('🔧 Tipo', c.tipo === 'escrow_blockchain' ? 'Escrow Blockchain' : 'Tradicional') +
+    '</div>' +
+    '<div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px">' +
+      '<div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">Condiciones financieras</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
+        infoRow('Tasa anual', c.tasa_anual ? (c.tasa_anual * 100).toFixed(2) + '%' : '—') +
+        infoRow('Tasa mensual', c.tasa_anual ? (c.tasa_anual/12*100).toFixed(4) + '%' : '—') +
+        infoRow('Valor del contrato', c.valor_contrato ? fmtM(c.valor_contrato) : fmtM(c.canon_mensual * (c.plazo_meses||0))) +
+        infoRow('Precio del bien', fmtM(c.precio_bien)) +
+        infoRow('Garantía / Depósito', fmtM(c.garantia)) +
+        infoRow('IVA sobre canon', '21%') +
+      '</div>' +
+    '</div>' +
+    '<div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px">' +
+      '<div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">Tomador</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
+        infoRow('Nombre', c.cliente_nombre || '—') +
+        infoRow('Email', c.cliente_email || '—') +
+        infoRow('CUIT', c.cuit_tomador || '—') +
+        infoRow('Teléfono', c.cliente_telefono || '—') +
+        infoRow('Domicilio', c.domicilio_tomador || '—') +
+        infoRow('Representante', c.representante_tomador || '—') +
+        infoRow('DNI representante', c.dni_representante || '—') +
+      '</div>' +
+    '</div>' +
+    '<div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:16px">' +
+      '<div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">Vehículo</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
+        infoRow('Descripción', c.auto_descripcion || '—') +
+        infoRow('VIN', c.auto_vin || '—') +
+        infoRow('Patente', c.auto_patente || '—') +
+        infoRow('Destino', c.destino_bien || '—') +
+        infoRow('Domicilio radicación', c.domicilio_radicacion || '—') +
+        infoRow('Aseguradora', c.aseguradora || '—') +
+      '</div>' +
+    '</div>';
+}
+
+function infoCard(label, value) {
+  return '<div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:16px">' +
+    '<div style="font-size:12px;color:var(--text3);margin-bottom:6px">' + label + '</div>' +
+    '<div style="font-size:15px;font-weight:700;color:var(--text)">' + value + '</div>' +
+  '</div>';
+}
+
+function infoRow(label, value) {
+  return '<div><div style="font-size:11px;color:var(--text3)">' + label + '</div><div style="font-size:13px;font-weight:600;color:var(--text);font-family:monospace">' + value + '</div></div>';
+}
+
+function abrirLiquidacionFS() {
+  document.getElementById('modal-liq-fs-portal').classList.add('show');
+  document.body.style.overflow = 'hidden';
+  loadLiquidacionFSPortal();
+}
+
+async function loadLiquidacionFSPortal() {
+  if (!sbClient || !userEmail) return;
+  const { data: usuario } = await sbClient.from('usuarios').select('id').eq('email', userEmail).maybeSingle();
+  if (!usuario) return;
+  const { data: contrato } = await sbClient.from('contratos').select('id,moneda').eq('usuario_id', usuario.id).maybeSingle();
+  if (!contrato) return;
+  const { data: cuotas } = await sbClient.from('cuotas').select('*').eq('contrato_id', contrato.id).order('numero', { ascending: true });
+
+  const tbody = document.getElementById('tbody-liq-fs-portal');
+  if (!cuotas || !cuotas.length) {
+    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--text3)">Sin cuotas registradas</td></tr>';
+    return;
+  }
+
+  const mon = contrato.moneda || 'USD';
+  const fmt = n => n ? Number(n).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2}) : '—';
+  const estadoColors = { paga: '#22c55e', pendiente: '#94a3b8', vencida: '#ef4444' };
+
+  let html = '';
+  cuotas.forEach(c => {
+    const cuotaBase = parseFloat(c.monto || 0);
+    const seguro = parseFloat(c.seguro || 0);
+    const adicion = parseFloat(c.adicionales_monto || 0);
+    const total = c.total_con_adicionales || (cuotaBase + seguro + adicion);
+    const isPaga = c.estado === 'paga';
+    const rowBg = isPaga ? '#f0fdf4' : '';
+
+    html += '<tr style="border-bottom:1px solid #f1f5f9;background:' + rowBg + '">';
+    html += '<td style="padding:10px 12px;font-family:monospace;font-size:12px;font-weight:600">' + String(c.numero).padStart(2,'0') + '</td>';
+    html += '<td style="padding:10px 12px;font-family:monospace;font-size:12px;white-space:nowrap">' + (c.fecha_vencimiento ? formatDatePortal(c.fecha_vencimiento) : '—') + '</td>';
+    html += '<td style="padding:10px 12px;font-family:monospace;font-size:12px;font-weight:700">' + mon + ' ' + fmt(c.monto) + '</td>';
+    html += '<td style="padding:10px 12px;font-family:monospace;font-size:12px;color:#3b82f6">' + fmt(c.capital) + '</td>';
+    html += '<td style="padding:10px 12px;font-family:monospace;font-size:12px;color:#f97316">' + fmt(c.interes) + '</td>';
+    html += '<td style="padding:10px 12px;font-family:monospace;font-size:12px;color:#94a3b8">' + fmt(c.iva) + '</td>';
+    html += '<td style="padding:10px 12px;font-family:monospace;font-size:12px;color:#22c55e">' + fmt(c.seguro) + '</td>';
+    html += '<td style="padding:10px 12px;font-family:monospace;font-size:12px;font-weight:800">' + mon + ' ' + fmt(total) + '</td>';
+    html += '<td style="padding:10px 12px;font-family:monospace;font-size:12px">' + fmt(c.saldo_restante) + '</td>';
+    html += '<td style="padding:10px 12px"><span style="background:' + (isPaga ? '#dcfce7' : '#f1f5f9') + ';color:' + (estadoColors[c.estado] || '#94a3b8') + ';border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700">' + c.estado.toUpperCase() + '</span></td>';
+    let pagoInfo = isPaga && c.fecha_pago ? formatDatePortal(c.fecha_pago) : '—';
+    if (isPaga && c.tx_hash && c.tx_hash.startsWith('http')) {
+      pagoInfo += ' <a href="' + c.tx_hash + '" target="_blank" style="color:#22c55e;font-weight:700;font-size:11px">📎 Comprobante ↗</a>';
+    }
+    html += '<td style="padding:10px 12px;font-size:12px;color:#22c55e">' + pagoInfo + '</td>';
+    html += '</tr>';
+  });
+  tbody.innerHTML = html;
+}
+
+function abrirLiquidacionFS() {
+  document.getElementById('modal-liq-fs-portal').classList.add('show');
+  document.body.style.overflow = 'hidden';
+  loadLiquidacionFSPortal();
+}
+
+async function loadLiquidacionFSPortal() {
+  if (!sbClient || !userEmail) return;
+  const { data: usuario } = await sbClient.from('usuarios').select('id').eq('email', userEmail).maybeSingle();
+  if (!usuario) return;
+  const { data: contrato } = await sbClient.from('contratos').select('id,moneda').eq('usuario_id', usuario.id).maybeSingle();
+  if (!contrato) return;
+  const { data: cuotas } = await sbClient.from('cuotas').select('*').eq('contrato_id', contrato.id).order('numero', { ascending: true });
+
+  const tbody = document.getElementById('tbody-liq-fs-portal');
+  if (!cuotas || !cuotas.length) {
+    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--text3)">Sin cuotas registradas</td></tr>';
+    return;
+  }
+
+  const mon = contrato.moneda || 'USD';
+  const fmt = n => n ? Number(n).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2}) : '—';
+
+  let html = '';
+  cuotas.forEach(c => {
+    const cuotaBase = parseFloat(c.monto || 0);
+    const seguro = parseFloat(c.seguro || 0);
+    const adicion = parseFloat(c.adicionales_monto || 0);
+    const total = c.total_con_adicionales || (cuotaBase + seguro + adicion);
+    const isPaga = c.estado === 'paga';
+
+    html += '<tr style="border-bottom:1px solid #f1f5f9;background:' + (isPaga ? '#f0fdf4' : '') + '">';
+    html += '<td style="padding:10px 12px;font-family:monospace;font-size:12px;font-weight:600">' + String(c.numero).padStart(2,'0') + '</td>';
+    html += '<td style="padding:10px 12px;font-family:monospace;font-size:12px;white-space:nowrap">' + (c.fecha_vencimiento ? formatDatePortal(c.fecha_vencimiento) : '—') + '</td>';
+    html += '<td style="padding:10px 12px;font-family:monospace;font-size:12px;font-weight:700">' + mon + ' ' + fmt(c.monto) + '</td>';
+    html += '<td style="padding:10px 12px;font-family:monospace;font-size:12px;color:#3b82f6">' + fmt(c.capital) + '</td>';
+    html += '<td style="padding:10px 12px;font-family:monospace;font-size:12px;color:#f97316">' + fmt(c.interes) + '</td>';
+    html += '<td style="padding:10px 12px;font-family:monospace;font-size:12px;color:#94a3b8">' + fmt(c.iva) + '</td>';
+    html += '<td style="padding:10px 12px;font-family:monospace;font-size:12px;color:#22c55e">' + fmt(c.seguro) + '</td>';
+    html += '<td style="padding:10px 12px;font-family:monospace;font-size:12px;font-weight:800">' + mon + ' ' + fmt(total) + '</td>';
+    html += '<td style="padding:10px 12px;font-family:monospace;font-size:12px">' + fmt(c.saldo_restante) + '</td>';
+    html += '<td style="padding:10px 12px"><span style="background:' + (isPaga ? '#dcfce7' : '#f1f5f9') + ';color:' + (isPaga ? '#22c55e' : '#94a3b8') + ';border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700">' + c.estado.toUpperCase() + '</span></td>';
+    html += '<td style="padding:10px 12px;font-size:12px;color:#22c55e">' + (isPaga && c.fecha_pago ? formatDatePortal(c.fecha_pago) : '—') + '</td>';
+    html += '</tr>';
+  });
+  tbody.innerHTML = html;
+}
 
 // Enter en email input
 document.getElementById('email-input').addEventListener('keydown', e => {
@@ -1770,3 +3142,72 @@ document.querySelectorAll('.otp-input').forEach((input, idx) => {
 </script>
 </body>
 </html>
+<!-- ══ DEPOSIT MODAL ══════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="deposit-modal">
+  <div class="modal-card">
+    <div class="modal-title">Depositar en escrow</div>
+    <div class="modal-subtitle">Conectá tu wallet y depositá los fondos para activar el contrato en blockchain.</div>
+
+    <div class="modal-info" id="modal-lease-info">
+      <div class="modal-info-row">
+        <span class="modal-info-key">Lease ID</span>
+        <span class="modal-info-val" id="modal-lease-id">—</span>
+      </div>
+      <div class="modal-info-row">
+        <span class="modal-info-key">Monto</span>
+        <span class="modal-info-val" id="modal-monto">—</span>
+      </div>
+      <div class="modal-info-row">
+        <span class="modal-info-key">Token</span>
+        <span class="modal-info-val" id="modal-token">—</span>
+      </div>
+      <div class="modal-info-row">
+        <span class="modal-info-key">Red</span>
+        <span class="modal-info-val">Base Mainnet</span>
+      </div>
+    </div>
+
+    <div class="wallet-steps">
+      <div class="wallet-step" id="step-connect">
+        <div class="step-num">1</div>
+        <div class="step-info">
+          <div class="step-label">Conectar wallet</div>
+          <div class="step-desc" id="step-connect-desc">MetaMask, Coinbase Wallet u otra</div>
+        </div>
+        <div class="step-status" id="step-connect-icon">○</div>
+      </div>
+      <div class="wallet-step" id="step-approve" style="display:none">
+        <div class="step-num">2</div>
+        <div class="step-info">
+          <div class="step-label">Aprobar token</div>
+          <div class="step-desc" id="step-approve-desc">Autorizar al contrato a usar tus fondos</div>
+        </div>
+        <div class="step-status" id="step-approve-icon">○</div>
+      </div>
+      <div class="wallet-step" id="step-deposit">
+        <div class="step-num" id="step-deposit-num">2</div>
+        <div class="step-info">
+          <div class="step-label">Firmar depósito</div>
+          <div class="step-desc">Confirmar la transacción en tu wallet</div>
+        </div>
+        <div class="step-status" id="step-deposit-icon">○</div>
+      </div>
+    </div>
+
+    <button class="deposit-btn" id="btn-deposit-action" onclick="handleDepositAction()">
+      <span id="deposit-action-text">Conectar wallet</span>
+      <div class="spinner" id="deposit-spinner" style="display:none;border-top-color:white"></div>
+    </button>
+    <button class="modal-close" onclick="closeDepositModal()">Cancelar</button>
+    <div id="deposit-msg" style="margin-top:10px"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+
+</body>
+</html>
+
+
