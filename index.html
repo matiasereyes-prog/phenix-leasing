@@ -731,7 +731,8 @@ async function submitForm() {
       auto_interes: auto,
       monto_estimado: monto,
       canal: 'landing',
-      estado: 'nuevo'
+      estado: 'nuevo',
+      origen_formulario: 'cotizacion'
     });
     if (error) throw error;
     document.getElementById('form-content').style.display = 'none';
