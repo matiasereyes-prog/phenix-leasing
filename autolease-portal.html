@@ -895,7 +895,7 @@ body {
     <div class="escrow-card" id="escrow-card" style="display:none">
       <div class="escrow-header">
         <div class="escrow-title">🔒 Escrow en blockchain</div>
-        <div class="chain-badge">● Base Mainnet</div>
+        <div class="chain-badge" id="escrow-chain-badge">● Base Mainnet</div>
       </div>
       <div class="escrow-amounts">
         <div class="amount-item">
@@ -1228,7 +1228,7 @@ body {
       </div>
       <div class="modal-info-row">
         <span class="modal-info-key">Red</span>
-        <span class="modal-info-val">Base Mainnet</span>
+        <span class="modal-info-val" id="modal-red">Base Mainnet</span>
       </div>
     </div>
 
@@ -1768,6 +1768,8 @@ function loadApp(data) {
     document.getElementById('hero-escrow-sub').textContent = 'liberado';
     document.getElementById('escrow-total').textContent = `${esc.total.toLocaleString()} ${esc.token}`;
     document.getElementById('escrow-token').textContent = esc.token;
+    const _chainBadgeEl = document.getElementById('escrow-chain-badge');
+    if (_chainBadgeEl) _chainBadgeEl.textContent = '● ' + getRedConfigPortal(esc.red).name;
     document.getElementById('escrow-libre').textContent = `${esc.liberado.toLocaleString()} ${esc.token}`;
     document.getElementById('escrow-libre-pct').textContent = `${pct}% liberado`;
     document.getElementById('escrow-bloq').textContent = `${esc.bloqueado.toLocaleString()} ${esc.token}`;
@@ -2114,6 +2116,8 @@ function openDepositModal() {
   document.getElementById('modal-lease-id').textContent = esc.lease_id || '—';
   document.getElementById('modal-monto').textContent = `${esc.total} ${esc.token}`;
   document.getElementById('modal-token').textContent = esc.token;
+  const _modalRedEl = document.getElementById('modal-red');
+  if (_modalRedEl) _modalRedEl.textContent = getRedConfigPortal(esc.red || 'base').name;
   depositState.leaseId = esc.lease_id;
   depositState.contratoId = window._contratoData?.contrato?.id || null;
   depositState.red = esc.red || 'base';
@@ -3161,7 +3165,7 @@ document.querySelectorAll('.otp-input').forEach((input, idx) => {
       </div>
       <div class="modal-info-row">
         <span class="modal-info-key">Red</span>
-        <span class="modal-info-val">Base Mainnet</span>
+        <span class="modal-info-val" id="modal-red">Base Mainnet</span>
       </div>
     </div>
 
