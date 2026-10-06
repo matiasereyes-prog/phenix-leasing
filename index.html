@@ -258,6 +258,18 @@ footer{
 <script>
   const _sb = supabase.createClient('https://xxscdrwkoutlualpveif.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4c2Nkcndrb3V0bHVhbHB2ZWlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk0MDkyMTcsImV4cCI6MjEwNDk4NTIxN30.BNM3dg0jFTxjNuhlJPLAjMcGBv1ZbkmLOMm_A9wOk68');
 </script>
+<!-- Meta Pixel -->
+<script>
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '994483953667312');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=994483953667312&ev=PageView&noscript=1"/></noscript>
+<!-- End Meta Pixel -->
 </head>
 <body>
 
@@ -722,6 +734,13 @@ async function submitForm() {
   btn.disabled = true;
   btn.textContent = 'Enviando...';
 
+  // Identificadores para Meta (deduplicacion navegador/servidor)
+  const metaEventId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
+    : 'ev-' + Date.now() + '-' + Math.random().toString(16).slice(2);
+  const _getCookie = n => { const m = document.cookie.match('(?:^|; )' + n + '=([^;]*)'); return m ? decodeURIComponent(m[1]) : null; };
+  let metaFbc = _getCookie('_fbc');
+  if (!metaFbc) { const fb = new URLSearchParams(location.search).get('fbclid'); if (fb) metaFbc = 'fb.1.' + Date.now() + '.' + fb; }
+
   // Guardar lead en Supabase
   try {
     const { error } = await _sb.from('leads').insert({
@@ -732,9 +751,13 @@ async function submitForm() {
       monto_estimado: monto,
       canal: 'landing',
       estado: 'nuevo',
-      origen_formulario: 'cotizacion'
+      origen_formulario: 'cotizacion',
+      meta_event_id: metaEventId,
+      meta_fbp: _getCookie('_fbp'),
+      meta_fbc: metaFbc
     });
     if (error) throw error;
+    try { if (typeof fbq === 'function') fbq('track', 'Lead', {}, { eventID: metaEventId }); } catch(_) {}
     document.getElementById('form-content').style.display = 'none';
     document.getElementById('form-success').style.display = 'block';
   } catch(e) {
