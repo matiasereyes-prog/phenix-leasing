@@ -734,6 +734,10 @@ async function submitForm() {
   btn.disabled = true;
   btn.textContent = 'Enviando...';
 
+  // Canal de origen: ?canal=whatsapp (u otro canal permitido); si no, 'landing'
+  const _canalParam = (new URLSearchParams(location.search).get('canal') || '').trim().toLowerCase();
+  const canalLead = ['whatsapp', 'instagram', 'linkedin', 'referido', 'directo'].includes(_canalParam) ? _canalParam : 'landing';
+
   // Identificadores para Meta (deduplicacion navegador/servidor)
   const metaEventId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
     : 'ev-' + Date.now() + '-' + Math.random().toString(16).slice(2);
@@ -749,7 +753,7 @@ async function submitForm() {
       telefono,
       auto_interes: auto,
       monto_estimado: monto,
-      canal: 'landing',
+      canal: canalLead,
       estado: 'nuevo',
       origen_formulario: 'cotizacion',
       meta_event_id: metaEventId,
