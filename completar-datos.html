@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Completá tus datos · Phenix Leasing</title>
+<meta name="robots" content="noindex, nofollow"/>
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--black:#101010;--white:#fff;--orange:#0F527C;--gray:#f2f2f2;--gray2:#e5e5e5;--text2:#404040;--text3:#737373;--err:#b42318;--sans:'Urbanist',sans-serif;--display:'Poppins',sans-serif}
+body{font-family:var(--sans);background:#fff;color:var(--black);-webkit-font-smoothing:antialiased;padding:24px 16px;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.form-card{background:var(--gray);border:1.5px solid var(--gray2);border-radius:24px;padding:32px;box-shadow:0 4px 40px rgba(0,0,0,.08),0 1px 4px rgba(0,0,0,.04);width:100%;max-width:460px;margin:0 auto}
+.form-title{font-family:var(--display);font-size:20px;font-weight:800;letter-spacing:-.5px;margin-bottom:6px}
+.form-subtitle{font-size:13px;color:var(--text2);margin-bottom:22px;line-height:1.5}
+.field{margin-bottom:14px}
+.field-label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px}
+.field-input,.field-select{width:100%;background:var(--white);border:1.5px solid var(--gray2);border-radius:10px;padding:12px 16px;font-family:var(--sans);font-size:14px;color:var(--black);outline:none;transition:all .2s}
+.field-input:focus,.field-select:focus{border-color:var(--orange)}
+.field-input::placeholder{color:var(--text3)}
+.field-select{cursor:pointer;appearance:none;padding-right:40px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b6b6b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:420px){.field-row{grid-template-columns:1fr}}
+.submit-btn{width:100%;padding:15px;background:var(--orange);color:#fff;border:none;border-radius:10px;font-family:var(--display);font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;margin-top:4px}
+.submit-btn:hover{background:#0c4266}
+.submit-btn:disabled{opacity:.5;cursor:not-allowed}
+.form-error{display:none;background:#fef3f2;border:1px solid #fecdca;color:var(--err);border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:14px}
+.form-disclaimer{font-size:11px;color:var(--text3);text-align:center;margin-top:12px;line-height:1.6}
+.center{text-align:center;padding:30px 10px}
+.center .icon{font-size:44px;margin-bottom:14px}
+.center .t{font-family:var(--display);font-size:21px;font-weight:800;letter-spacing:-.5px;margin-bottom:8px}
+.center .x{font-size:14px;color:var(--text2);line-height:1.6}
+</style>
+</head>
+<body>
+<div class="form-card">
+  <div id="cargando" class="center"><div class="x">Cargando…</div></div>
+
+  <div id="invalido" class="center" style="display:none">
+    <div class="icon">🔗</div>
+    <div class="t">Link no válido</div>
+    <div class="x">Este link no existe o venció. Escribinos a <a href="mailto:leasing@phenix.com.ar" style="color:var(--orange)">leasing@phenix.com.ar</a> y te ayudamos.</div>
+  </div>
+
+  <div id="form" style="display:none">
+    <div class="form-title" id="titulo">Completá tus datos</div>
+    <div class="form-subtitle">Con esto armamos tu propuesta a medida. Te lleva 2 minutos.</div>
+    <div class="form-error" id="error"></div>
+
+    <div class="field-row">
+      <div class="field">
+        <label class="field-label">Sos…</label>
+        <select class="field-select" id="f-tipo">
+          <option value="">Seleccioná</option>
+          <option value="fisica">Persona física</option>
+          <option value="juridica">Empresa</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label" id="lbl-doc">DNI o CUIT</label>
+        <input class="field-input" id="f-doc" inputmode="numeric" placeholder="Solo números" maxlength="13"/>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">¿A qué te dedicás?</label>
+      <input class="field-input" id="f-actividad" placeholder="Ej: comercio, servicios, profesional independiente" maxlength="200"/>
+    </div>
+    <div class="field">
+      <label class="field-label">Ingresos o facturación aproximada de los últimos 12 meses</label>
+      <input class="field-input" id="f-ingresos" placeholder="Ej: $60.000.000 anuales" maxlength="100"/>
+    </div>
+    <div class="field">
+      <label class="field-label">Modelo que te interesa (confirmalo o corregilo)</label>
+      <input class="field-input" id="f-modelo" placeholder="Marca y modelo" maxlength="120"/>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label class="field-label">Plazo deseado</label>
+        <select class="field-select" id="f-plazo">
+          <option value="">Seleccioná</option>
+          <option>12 meses</option><option>24 meses</option><option>36 meses</option><option>48 meses</option><option>No sé todavía</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label">Anticipo disponible</label>
+        <input class="field-input" id="f-anticipo" placeholder="Ej: USD 5.000 o ninguno" maxlength="100"/>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label class="field-label">Localidad</label>
+        <input class="field-input" id="f-localidad" placeholder="Ej: CABA" maxlength="100"/>
+      </div>
+      <div class="field">
+        <label class="field-label">Horario para llamarte</label>
+        <select class="field-select" id="f-horario">
+          <option value="">Indistinto</option>
+          <option>Mañana (9 a 12)</option><option>Mediodía (12 a 15)</option><option>Tarde (15 a 18)</option>
+        </select>
+      </div>
+    </div>
+    <button class="submit-btn" id="btn" onclick="enviar()">Enviar mis datos →</button>
+    <div class="form-disclaimer">Tu información está protegida y solo la usamos para armar tu propuesta.</div>
+  </div>
+
+  <div id="ok" class="center" style="display:none">
+    <div class="icon">✅</div>
+    <div class="t">¡Gracias! Recibimos tus datos</div>
+    <div class="x">Un asesor de Phenix Leasing te va a llamar para acompañarte con tu propuesta. Si querés corregir algo, podés volver a abrir este mismo link.</div>
+  </div>
+</div>
+
+<script>
+const API = 'https://xxscdrwkoutlualpveif.supabase.co/functions/v1/datos-lead';
+const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4c2Nkcndrb3V0bHVhbHB2ZWlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk0MDkyMTcsImV4cCI6MjEwNDk4NTIxN30.BNM3dg0jFTxjNuhlJPLAjMcGBv1ZbkmLOMm_A9wOk68';
+const TOKEN = new URLSearchParams(location.search).get('t') || '';
+const $ = id => document.getElementById(id);
+const show = id => { ['cargando','invalido','form','ok'].forEach(x => $(x).style.display = x === id ? 'block' : 'none'); };
+
+$('f-tipo').addEventListener('change', () => {
+  const t = $('f-tipo').value;
+  $('lbl-doc').textContent = t === 'fisica' ? 'DNI' : t === 'juridica' ? 'CUIT' : 'DNI o CUIT';
+});
+
+async function iniciar() {
+  if (!TOKEN) return show('invalido');
+  try {
+    const r = await fetch(API + '?t=' + encodeURIComponent(TOKEN), { headers: { apikey: KEY } });
+    if (!r.ok) return show('invalido');
+    const d = await r.json();
+    if (d.nombre) $('titulo').textContent = 'Hola ' + d.nombre + ', completá tus datos';
+    const p = d.datos || {};
+    $('f-tipo').value = p.tipo_persona || '';
+    $('f-tipo').dispatchEvent(new Event('change'));
+    $('f-doc').value = p.documento || '';
+    $('f-actividad').value = p.actividad || '';
+    $('f-ingresos').value = p.ingresos || '';
+    $('f-modelo').value = p.modelo_confirmado || d.auto_interes || '';
+    $('f-plazo').value = p.plazo_meses || '';
+    $('f-anticipo').value = p.anticipo || '';
+    $('f-localidad').value = p.localidad || '';
+    $('f-horario').value = p.horario_contacto || '';
+    show('form');
+  } catch (e) { show('invalido'); }
+}
+
+async function enviar() {
+  const err = $('error'); err.style.display = 'none';
+  const body = {
+    t: TOKEN,
+    tipo_persona: $('f-tipo').value,
+    documento: $('f-doc').value,
+    actividad: $('f-actividad').value,
+    ingresos: $('f-ingresos').value,
+    modelo_confirmado: $('f-modelo').value,
+    plazo_meses: $('f-plazo').value,
+    anticipo: $('f-anticipo').value,
+    localidad: $('f-localidad').value,
+    horario_contacto: $('f-horario').value,
+  };
+  $('btn').disabled = true; $('btn').textContent = 'Enviando…';
+  try {
+    const r = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: KEY }, body: JSON.stringify(body) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.error || 'No pudimos guardar tus datos.');
+    show('ok');
+  } catch (e) {
+    err.textContent = e.message; err.style.display = 'block';
+    $('btn').disabled = false; $('btn').textContent = 'Enviar mis datos →';
+    err.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+iniciar();
+</script>
+</body>
+</html>
