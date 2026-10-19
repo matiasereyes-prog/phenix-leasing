@@ -26,6 +26,12 @@ body{font-family:var(--sans);background:#fff;color:var(--black);-webkit-font-smo
 .submit-btn:disabled{opacity:.5;cursor:not-allowed}
 .form-error{display:none;background:#fef3f2;border:1px solid #fecdca;color:var(--err);border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:14px}
 .form-disclaimer{font-size:11px;color:var(--text3);text-align:center;margin-top:12px;line-height:1.6}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{cursor:pointer}
+.chip input{position:absolute;opacity:0;pointer-events:none}
+.chip span{display:inline-block;background:var(--white);border:1.5px solid var(--gray2);border-radius:999px;padding:8px 16px;font-size:13px;font-weight:600;color:var(--text2);transition:all .2s}
+.chip input:checked+span{background:var(--orange);border-color:var(--orange);color:#fff}
+.chip input:focus-visible+span{outline:2px solid var(--orange);outline-offset:2px}
 .center{text-align:center;padding:30px 10px}
 .center .icon{font-size:44px;margin-bottom:14px}
 .center .t{font-family:var(--display);font-size:21px;font-weight:800;letter-spacing:-.5px;margin-bottom:8px}
@@ -44,7 +50,7 @@ body{font-family:var(--sans);background:#fff;color:var(--black);-webkit-font-smo
 
   <div id="form" style="display:none">
     <div class="form-title" id="titulo">Completá tus datos</div>
-    <div class="form-subtitle">Con esto armamos tu propuesta a medida. Te lleva 2 minutos.</div>
+    <div class="form-subtitle">Con esto armamos tu propuesta de leasing con garantía en activos digitales. Te lleva 2 minutos.</div>
     <div class="form-error" id="error"></div>
 
     <div class="field-row">
@@ -70,8 +76,21 @@ body{font-family:var(--sans);background:#fff;color:var(--black);-webkit-font-smo
       <input class="field-input" id="f-ingresos" placeholder="Ej: $60.000.000 anuales" maxlength="100"/>
     </div>
     <div class="field">
-      <label class="field-label">Modelo que te interesa (confirmalo o corregilo)</label>
-      <input class="field-input" id="f-modelo" placeholder="Marca y modelo" maxlength="120"/>
+      <label class="field-label">¿Qué bien querés financiar con leasing? (confirmalo o corregilo)</label>
+      <input class="field-input" id="f-modelo" placeholder="Ej: vehículo, maquinaria, equipos" maxlength="120"/>
+    </div>
+    <div class="field">
+      <label class="field-label">¿Qué activos digitales dejarías en garantía?</label>
+      <div class="chips" id="f-activos">
+        <label class="chip"><input type="checkbox" value="dBTC"/><span>dBTC</span></label>
+        <label class="chip"><input type="checkbox" value="USDT"/><span>USDT</span></label>
+        <label class="chip"><input type="checkbox" value="USDC"/><span>USDC</span></label>
+        <label class="chip"><input type="checkbox" value="USDY"/><span>USDY</span></label>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">Monto aproximado en garantía</label>
+      <input class="field-input" id="f-monto" placeholder="Ej: USD 30.000" maxlength="100"/>
     </div>
     <div class="field-row">
       <div class="field">
@@ -106,7 +125,7 @@ body{font-family:var(--sans);background:#fff;color:var(--black);-webkit-font-smo
   <div id="ok" class="center" style="display:none">
     <div class="icon">✅</div>
     <div class="t">¡Gracias! Recibimos tus datos</div>
-    <div class="x">Un asesor de Phenix Leasing te va a llamar para acompañarte con tu propuesta. Si querés corregir algo, podés volver a abrir este mismo link.</div>
+    <div class="x">Un asesor de Phenix Leasing te va a llamar para analizar con vos los activos en garantía y armar tu propuesta. Si querés corregir algo, podés volver a abrir este mismo link.</div>
   </div>
 </div>
 
@@ -136,6 +155,9 @@ async function iniciar() {
     $('f-actividad').value = p.actividad || '';
     $('f-ingresos').value = p.ingresos || '';
     $('f-modelo').value = p.modelo_confirmado || d.auto_interes || '';
+    const act = (p.activos_garantia || '').split(',').map(x => x.trim());
+    document.querySelectorAll('#f-activos input').forEach(c => { c.checked = act.includes(c.value); });
+    $('f-monto').value = p.monto_garantia || '';
     $('f-plazo').value = p.plazo_meses || '';
     $('f-anticipo').value = p.anticipo || '';
     $('f-localidad').value = p.localidad || '';
@@ -153,6 +175,8 @@ async function enviar() {
     actividad: $('f-actividad').value,
     ingresos: $('f-ingresos').value,
     modelo_confirmado: $('f-modelo').value,
+    activos_garantia: [...document.querySelectorAll('#f-activos input:checked')].map(c => c.value).join(', '),
+    monto_garantia: $('f-monto').value,
     plazo_meses: $('f-plazo').value,
     anticipo: $('f-anticipo').value,
     localidad: $('f-localidad').value,
